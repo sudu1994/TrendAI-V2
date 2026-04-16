@@ -1084,7 +1084,7 @@
     <li><a href="#how">仕組み</a></li>
     <li><a href="#sources">データソース</a></li>
     <li><a href="#pricing">料金</a></li>
-    <li><a href="#cta" class="nav-cta">無料で試す</a></li>
+    <li><a href="#try" class="nav-cta">無料で試す</a></li>
   </ul>
 </nav>
 
@@ -1097,7 +1097,7 @@
       感覚ではなく、データで判断する。Yahoo Japan・TikTok・楽天など日本の主要プラットフォームのトレンドを解析し、副業アイデアの検証から収益化までを一貫支援します。
     </p>
     <div class="hero-actions">
-      <a href="#cta" class="btn-primary">無料でアイデアを診断する</a>
+      <a href="#try" class="btn-primary">無料でアイデアを診断する</a>
       <a href="#how" class="btn-secondary">仕組みを見る →</a>
     </div>
     <div class="hero-stats">
@@ -1325,30 +1325,48 @@
 </section>
 
 <!-- DEMO SECTION -->
-<section class="demo-section">
+<section class="demo-section" id="try">
   <div class="demo-inner">
     <div class="section-eyebrow" style="color:rgba(200,68,42,0.7)">
       <span style="background:rgba(200,68,42,0.5);width:24px;height:1px;display:inline-block"></span>
-      インタラクティブデモ
+      アイデアを診断する
     </div>
-    <h2 style="color:var(--paper)">実際に試してみる</h2>
+    <h2 style="color:var(--paper)">あなたのアイデアを<br>入力してください</h2>
+    <p style="color:rgba(245,242,236,0.55);font-size:15px;margin-top:0.75rem;margin-bottom:2rem">日本語・英語どちらでもOK。どんなビジネスアイデアでも診断できます。</p>
 
-    <div class="demo-grid">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:2.5rem;align-items:start">
+
+      <!-- INPUT SIDE -->
       <div>
         <div class="demo-input-area">
-          <div class="demo-label">アイデアを選択</div>
-          <div class="demo-chips">
-            <button class="demo-chip" onclick="showDemo(this,'AIを使った外国人向けビザ申請サポート')">ビザ申請サポート</button>
-            <button class="demo-chip" onclick="showDemo(this,'英語家庭教師オンライン')">英語レッスン</button>
-            <button class="demo-chip" onclick="showDemo(this,'フリーランス通訳・翻訳サービス')">翻訳・通訳</button>
-            <button class="demo-chip" onclick="showDemo(this,'外国人向け不動産仲介サポート')">不動産サポート</button>
+          <div class="demo-label">副業・ビジネスアイデア</div>
+          <textarea
+            id="main-idea-input"
+            placeholder="例：AIを使ったビザ申請サポート、英語オンラインレッスン、翻訳サービス..."
+            style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:4px;padding:14px;color:var(--paper);font-size:14px;font-family:'Noto Sans JP',sans-serif;resize:none;height:110px;line-height:1.7;outline:none;margin-bottom:1rem"
+          ></textarea>
+
+          <div class="demo-label" style="margin-bottom:0.5rem">または例から選ぶ</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1.5rem">
+            <button class="demo-chip" onclick="setIdea('AIを使った外国人向けビザ申請サポート')">ビザ申請AI</button>
+            <button class="demo-chip" onclick="setIdea('英語家庭教師オンライン')">英語レッスン</button>
+            <button class="demo-chip" onclick="setIdea('フリーランス通訳・翻訳サービス')">翻訳・通訳</button>
+            <button class="demo-chip" onclick="setIdea('外国人向け不動産仲介サポート')">不動産サポート</button>
+            <button class="demo-chip" onclick="setIdea('日本語学習アプリ開発')">日本語学習アプリ</button>
           </div>
-          <p style="font-size:13px;color:rgba(255,255,255,0.35);margin-top:1rem">アイデアを選ぶとリアルタイムで検証結果が表示されます</p>
+
+          <button onclick="runValidation()" id="validate-btn" style="width:100%;padding:14px;background:var(--accent);color:white;border:none;border-radius:4px;font-size:15px;font-weight:500;font-family:'Noto Sans JP',sans-serif;cursor:pointer;transition:opacity 0.2s">
+            診断開始 →
+          </button>
+          <p style="font-size:12px;color:rgba(255,255,255,0.25);margin-top:0.75rem;text-align:center">データに基づく分析 · 約5〜10秒</p>
         </div>
       </div>
 
-      <div id="demo-output">
-        <p style="font-size:14px;color:rgba(255,255,255,0.35);text-align:center;padding:3rem 0">← アイデアを選択してください</p>
+      <!-- RESULTS SIDE -->
+      <div id="main-results">
+        <div style="text-align:center;padding:3rem 1rem;color:rgba(255,255,255,0.25);font-size:14px;border:1px dashed rgba(255,255,255,0.1);border-radius:6px">
+          アイデアを入力して診断開始ボタンを押してください
+        </div>
       </div>
     </div>
   </div>
@@ -1682,7 +1700,16 @@
 <section class="cta-section" id="cta">
   <h2>今日、最初の診断を<br>無料で始める</h2>
   <p>アイデアを入力するだけ。データが答えを出します。</p>
-  <a href="#" class="cta-btn-white">無料でアイデアを診断する →</a>
+  <div style="display:flex;gap:12px;justify-content:center;max-width:560px;margin:0 auto">
+    <input
+      id="cta-input"
+      type="text"
+      placeholder="あなたのアイデアを入力..."
+      style="flex:1;padding:14px 18px;border:none;border-radius:4px;font-size:15px;font-family:'Noto Sans JP',sans-serif;outline:none;background:white;color:#0f0e0c"
+      onkeydown="if(event.key==='Enter') runCTA()"
+    />
+    <button onclick="runCTA()" style="padding:14px 24px;background:#0f0e0c;color:white;border:none;border-radius:4px;font-size:15px;font-weight:500;font-family:'Noto Sans JP',sans-serif;cursor:pointer;white-space:nowrap">診断する →</button>
+  </div>
   <p style="margin-top:1.5rem;font-size:12px;color:rgba(255,255,255,0.5)">クレジットカード不要。30秒で診断開始。</p>
 </section>
 
@@ -1701,122 +1728,188 @@
 // Scroll reveal
 const reveals = document.querySelectorAll('.reveal');
 const observer = new IntersectionObserver((entries) => {
-  entries.forEach(e => {
-    if(e.isIntersecting) { e.target.classList.add('visible'); }
-  });
+  entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
 }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
 reveals.forEach(r => observer.observe(r));
 
-// Auto-detect: relative path works on Vercel, fallback to localhost for local dev
-const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:3000'
-  : '';
+// API base — relative path works on Vercel, localhost for local dev
+const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? 'http://localhost:3000' : '';
 
-async function callValidateAPI(idea) {
-  const response = await fetch(`${API_BASE}/api/validate`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ idea })
-  });
-  if (!response.ok) throw new Error(`API error: ${response.status}`);
-  return response.json();
+// ── Set idea from chip ───────────────────────────────────────
+function setIdea(text) {
+  document.getElementById('main-idea-input').value = text;
+  document.querySelectorAll('.demo-chip').forEach(c => c.classList.remove('active'));
+  event.target.classList.add('active');
 }
 
-function renderAPIResult(data, out) {
+// ── CTA bottom input → scroll to try section and run ────────
+function runCTA() {
+  const val = document.getElementById('cta-input').value.trim();
+  if (!val) { document.getElementById('cta-input').focus(); return; }
+  document.getElementById('main-idea-input').value = val;
+  document.getElementById('try').scrollIntoView({ behavior: 'smooth' });
+  setTimeout(() => runValidation(), 600);
+}
+
+// ── Main validation ──────────────────────────────────────────
+async function runValidation() {
+  const idea = document.getElementById('main-idea-input').value.trim();
+  if (!idea) {
+    document.getElementById('main-idea-input').focus();
+    document.getElementById('main-idea-input').style.borderColor = '#c8442a';
+    setTimeout(() => document.getElementById('main-idea-input').style.borderColor = 'rgba(255,255,255,0.12)', 1500);
+    return;
+  }
+
+  const btn = document.getElementById('validate-btn');
+  const out = document.getElementById('main-results');
+  btn.disabled = true;
+  btn.textContent = '分析中...';
+
+  out.innerHTML = `<div style="text-align:center;padding:3rem 1rem;color:rgba(255,255,255,0.4);font-size:14px">
+    <div style="width:24px;height:24px;border:2px solid rgba(255,255,255,0.1);border-top-color:#c8442a;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 14px"></div>
+    データソースを照会中...<br>
+    <span style="font-size:12px;opacity:0.6">Rakuten · Google Trends · YouTube</span>
+  </div>`;
+
+  try {
+    let data;
+    try {
+      const res = await fetch(`${API_BASE}/api/validate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idea })
+      });
+      if (!res.ok) throw new Error('api_error');
+      data = await res.json();
+    } catch {
+      data = getMockResult(idea);
+    }
+    renderResult(data, out);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '診断開始 →';
+    out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+// ── Render result ────────────────────────────────────────────
+function renderResult(data, out) {
   const s = data.scores;
-  const scoreColor = v => v >= 70 ? '#4ade80' : v >= 45 ? '#fbbf24' : '#f87171';
+  const color = v => v >= 70 ? '#4ade80' : v >= 45 ? '#fbbf24' : '#f87171';
   const rows = [
-    { k: '需要', v: s.demand.label, score: s.demand.score },
-    { k: '競合', v: s.competition.label, score: s.competition.score },
+    { k: '需要',   v: s.demand.label,       score: s.demand.score },
+    { k: '競合',   v: s.competition.label,  score: s.competition.score },
     { k: '収益化', v: s.monetization.label, score: s.monetization.score },
-    { k: 'SNSバズ', v: s.socialBuzz.label, score: s.socialBuzz.score },
+    { k: 'SNSバズ',v: s.socialBuzz.label,   score: s.socialBuzz.score },
   ];
 
-  const moneyPath = data.monetizationPaths?.[0];
+  const moneyPaths = (data.monetizationPaths || []).slice(0, 2);
+  const roadmap = (data.roadmap || []).slice(0, 7);
   const kaizen = data.kaizen;
-  const sourcesBadges = Object.entries(data.sources || {}).map(([name, s]) =>
-    `<span style="padding:2px 8px;border-radius:10px;font-size:10px;background:${s.status==='ok' && !s.mock ? 'rgba(74,222,128,0.15)' : 'rgba(255,255,255,0.07)'};color:${s.status==='ok' && !s.mock ? '#4ade80' : 'rgba(255,255,255,0.35)'};">${name}${s.mock?' (mock)':''}</span>`
+  const sources = data.sources || {};
+
+  const sourcesBadges = Object.entries(sources).map(([name, s]) =>
+    `<span style="padding:2px 8px;border-radius:10px;font-size:10px;
+      background:${s.status==='ok'&&!s.mock?'rgba(74,222,128,0.12)':'rgba(255,255,255,0.06)'};
+      color:${s.status==='ok'&&!s.mock?'#4ade80':'rgba(255,255,255,0.3)'}">
+      ${name}${s.mock?' (mock)':''}
+    </span>`
   ).join('');
 
   out.innerHTML = `
-    <div style="display:flex;flex-direction:column;gap:12px">
-      <div style="font-size:12px;color:rgba(255,255,255,0.4);font-family:'Space Mono',monospace;letter-spacing:0.1em;text-transform:uppercase">診断結果</div>
-      <div style="padding:12px 14px;background:rgba(255,255,255,0.04);border-radius:4px;font-size:13px;color:rgba(255,255,255,0.6)">${data.idea}</div>
-      ${rows.map(r=>`
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:rgba(255,255,255,0.03);border-radius:4px">
+    <div style="display:flex;flex-direction:column;gap:10px">
+
+      <div style="font-size:11px;color:rgba(255,255,255,0.35);font-family:'Space Mono',monospace;letter-spacing:0.1em;text-transform:uppercase">診断結果 — ${data.idea}</div>
+
+      ${rows.map(r => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:11px 14px;background:rgba(255,255,255,0.03);border-radius:4px">
           <span style="font-size:13px;color:rgba(255,255,255,0.5)">${r.k}</span>
-          <div style="display:flex;align-items:center;gap:8px">
-            <div style="width:60px;height:3px;background:rgba(255,255,255,0.08);border-radius:2px"><div style="width:${r.score}%;height:100%;background:${scoreColor(r.score)};border-radius:2px"></div></div>
-            <span style="font-size:14px;font-weight:500;color:${scoreColor(r.score)};min-width:50px;text-align:right">${r.v}</span>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:64px;height:3px;background:rgba(255,255,255,0.07);border-radius:2px">
+              <div style="width:${r.score}%;height:100%;background:${color(r.score)};border-radius:2px"></div>
+            </div>
+            <span style="font-size:13px;font-weight:500;color:${color(r.score)};min-width:48px;text-align:right">${r.v}</span>
           </div>
         </div>`).join('')}
-      <div style="text-align:center;padding:2rem;background:rgba(200,68,42,0.1);border:1px solid rgba(200,68,42,0.2);border-radius:6px">
+
+      <div style="text-align:center;padding:1.75rem;background:rgba(200,68,42,0.1);border:1px solid rgba(200,68,42,0.2);border-radius:6px">
         <div style="font-family:'DM Serif Display',serif;font-size:3.5rem;color:#c8442a;line-height:1">${data.opportunityScore}</div>
         <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:6px;font-family:'Space Mono',monospace">${data.opportunityLabel}</div>
       </div>
-      ${moneyPath ? `
+
+      ${moneyPaths.length ? `
       <div style="padding:12px 14px;background:rgba(255,255,255,0.03);border-radius:4px">
-        <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:6px;font-family:'Space Mono',monospace;letter-spacing:0.08em;text-transform:uppercase">推奨マネタイズ</div>
-        <div style="font-size:14px;font-weight:500;color:var(--paper)">${moneyPath.platform}</div>
-        <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-top:2px">${moneyPath.priceRange}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.3);font-family:'Space Mono',monospace;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px">収益化パス</div>
+        ${moneyPaths.map(m => `
+          <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px">
+            <span style="color:rgba(255,255,255,0.6)">${m.platform}</span>
+            <span style="color:var(--paper);font-weight:500">${m.priceRange}</span>
+          </div>`).join('')}
       </div>` : ''}
+
       ${kaizen ? `
       <div style="padding:12px 14px;background:rgba(255,255,255,0.03);border-radius:4px">
-        <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:8px;font-family:'Space Mono',monospace;letter-spacing:0.08em;text-transform:uppercase">改善ロードマップ</div>
-        <div style="font-size:12px;color:rgba(255,255,255,0.55);line-height:1.8">
-          v1: ${kaizen.v1.idea.slice(0,30)}<br>
-          → v2: ${kaizen.v2.idea.slice(0,35)}<br>
-          → v3: ${kaizen.v3.idea.slice(0,35)}
+        <div style="font-size:10px;color:rgba(255,255,255,0.3);font-family:'Space Mono',monospace;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px">改善ロードマップ</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:2">
+          v1 → ${kaizen.v1.idea.slice(0,28)}<br>
+          v2 → ${kaizen.v2.idea.slice(0,32)}<br>
+          v3 → ${kaizen.v3.idea.slice(0,32)}
         </div>
       </div>` : ''}
-      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">${sourcesBadges}</div>
+
+      ${roadmap.length ? `
+      <div style="padding:12px 14px;background:rgba(255,255,255,0.03);border-radius:4px">
+        <div style="font-size:10px;color:rgba(255,255,255,0.3);font-family:'Space Mono',monospace;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px">7日間ロードマップ</div>
+        ${roadmap.map(r => `
+          <div style="display:flex;gap:12px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px">
+            <span style="color:#c8442a;font-family:'Space Mono',monospace;min-width:36px">DAY ${r.day}</span>
+            <span style="color:rgba(255,255,255,0.55)">${r.task}</span>
+          </div>`).join('')}
+      </div>` : ''}
+
+      <div style="display:flex;flex-wrap:wrap;gap:4px;padding-top:4px">${sourcesBadges}</div>
     </div>`;
 }
 
-function showDemo(el, idea) {
-  document.querySelectorAll('.demo-chip').forEach(c => c.classList.remove('active'));
-  el.classList.add('active');
-  const out = document.getElementById('demo-output');
-
-  out.innerHTML = `<div style="text-align:center;padding:2rem;color:rgba(255,255,255,0.4);font-size:13px">
-    <div style="width:20px;height:20px;border:2px solid rgba(255,255,255,0.15);border-top-color:#c8442a;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px"></div>
-    APIを照会中...
-  </div>`;
-
-  callValidateAPI(idea)
-    .then(data => renderAPIResult(data, out))
-    .catch(() => {
-      // Backend not running — fallback to inline mock
-      const mock = getMockResult(idea);
-      renderAPIResult(mock, out);
-    });
-}
-
-// Fallback mock (used when backend is not running)
+// ── Fallback mock (when backend not running) ─────────────────
 function getMockResult(idea) {
-  const baseScore = 65 + Math.floor(Math.random() * 20);
+  const s = 65 + Math.floor(Math.random() * 20);
   return {
     idea,
-    opportunityScore: baseScore,
-    opportunityLabel: baseScore >= 75 ? '高い機会' : '中程度の機会',
+    opportunityScore: s,
+    opportunityLabel: s >= 75 ? '高い機会' : '中程度の機会',
     scores: {
-      demand: { score: baseScore + 5, label: '高い' },
-      competition: { score: 55, label: '中程度' },
-      monetization: { score: baseScore, label: '高い' },
-      socialBuzz: { score: 50, label: '中程度' },
+      demand:       { score: s + 5, label: '高い' },
+      competition:  { score: 52,    label: '中程度' },
+      monetization: { score: s,     label: '高い' },
+      socialBuzz:   { score: 48,    label: '中程度' },
     },
-    monetizationPaths: [{ platform: 'ランサーズ・ストアカ', priceRange: '¥2,000〜¥15,000/件' }],
+    monetizationPaths: [
+      { platform: 'ランサーズ・クラウドワークス', priceRange: '¥2,000〜¥15,000/件' },
+      { platform: 'note 有料記事',               priceRange: '¥300〜¥3,000/記事' },
+    ],
     kaizen: {
       v1: { idea },
       v2: { idea: `${idea}（外国人向け特化）` },
       v3: { idea: `${idea}（月額¥3,800プラン）` },
     },
+    roadmap: [
+      { day:1, task:'競合5社をリサーチし差別化ポイントを特定' },
+      { day:2, task:'ランディングページを作成・公開（BASE or note）' },
+      { day:3, task:'X・Instagram・外国人コミュニティで告知' },
+      { day:4, task:'ランサーズ・ストアカにサービスを出品' },
+      { day:5, task:'初回3名に無料相談オファー → フィードバック収集' },
+      { day:6, task:'SEO記事1本をnoteに公開' },
+      { day:7, task:'結果を振り返り改善提案を適用してv2に更新' },
+    ],
     sources: {
-      rakuten: { status: 'ok', mock: true },
-      googleTrends: { status: 'ok', mock: true },
-      youtube: { status: 'ok', mock: true },
-      tiktok: { status: 'failed', mock: true },
-      twitter: { status: 'failed', mock: true },
+      rakuten:      { status: 'ok',     mock: true },
+      googleTrends: { status: 'ok',     mock: true },
+      youtube:      { status: 'ok',     mock: true },
+      tiktok:       { status: 'failed', mock: true },
+      twitter:      { status: 'failed', mock: true },
     }
   };
 }
