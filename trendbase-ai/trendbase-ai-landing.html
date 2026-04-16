@@ -1,0 +1,1828 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrendBaseAI — トレンドから最初の収益へ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Serif+Display:ital@0;1&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f0e0c;
+    --paper: #f5f2ec;
+    --accent: #c8442a;
+    --accent2: #2a6e4f;
+    --muted: #6b6760;
+    --border: rgba(15,14,12,0.12);
+    --card: #ffffff;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-weight: 400;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* NOISE TEXTURE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 1.25rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(245,242,236,0.88);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    font-family: 'Space Mono', monospace;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .nav-logo span { color: var(--accent); }
+
+  .nav-links {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+    align-items: center;
+  }
+
+  .nav-links a {
+    font-size: 13px;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--ink); }
+
+  .nav-cta {
+    background: var(--ink) !important;
+    color: var(--paper) !important;
+    padding: 8px 18px !important;
+    border-radius: 2px;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+  }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding-top: 80px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-left {
+    padding: 6rem 3rem 4rem 4rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    z-index: 2;
+  }
+
+  .eyebrow {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    opacity: 0;
+    animation: fadeUp 0.6s 0.2s forwards;
+  }
+
+  .eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 24px;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(3rem, 5vw, 5.5rem);
+    line-height: 1.0;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    animation: fadeUp 0.6s 0.35s forwards;
+  }
+
+  h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .hero-desc {
+    font-size: 16px;
+    color: var(--muted);
+    max-width: 480px;
+    margin-bottom: 2.5rem;
+    line-height: 1.9;
+    opacity: 0;
+    animation: fadeUp 0.6s 0.5s forwards;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    opacity: 0;
+    animation: fadeUp 0.6s 0.65s forwards;
+  }
+
+  .btn-primary {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 14px 28px;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'Noto Sans JP', sans-serif;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .btn-primary:hover {
+    background: var(--accent);
+    transform: translateY(-1px);
+  }
+
+  .btn-secondary {
+    font-size: 13px;
+    color: var(--muted);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.2s;
+  }
+
+  .btn-secondary:hover { color: var(--ink); }
+
+  .hero-stats {
+    display: flex;
+    gap: 2rem;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+    opacity: 0;
+    animation: fadeUp 0.6s 0.8s forwards;
+  }
+
+  .stat-item { text-align: left; }
+
+  .stat-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    color: var(--ink);
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+    letter-spacing: 0.05em;
+  }
+
+  /* HERO RIGHT — LIVE DASHBOARD MOCKUP */
+  .hero-right {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6rem 3rem 4rem 2rem;
+    opacity: 0;
+    animation: fadeIn 0.8s 0.7s forwards;
+  }
+
+  .dashboard-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 24px 64px rgba(15,14,12,0.12);
+    overflow: hidden;
+  }
+
+  .dash-header {
+    background: var(--ink);
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .dash-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--paper);
+    opacity: 0.7;
+  }
+
+  .dash-live {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #4ade80;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #4ade80;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .dash-idea {
+    padding: 1.25rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .dash-idea strong {
+    display: block;
+    font-size: 15px;
+    color: var(--ink);
+    font-weight: 500;
+    margin-top: 4px;
+  }
+
+  .dash-scores {
+    padding: 1.25rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .dash-score-item {
+    background: #f8f7f4;
+    padding: 0.875rem;
+    border-radius: 4px;
+  }
+
+  .ds-label { font-size: 11px; color: var(--muted); margin-bottom: 2px; }
+  .ds-val { font-size: 16px; font-weight: 500; color: var(--ink); }
+  .ds-bar { height: 3px; background: #e8e5de; border-radius: 2px; margin-top: 6px; }
+  .ds-fill { height: 100%; border-radius: 2px; }
+
+  .dash-money {
+    padding: 1.25rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .money-title { font-size: 11px; color: var(--muted); margin-bottom: 0.75rem; letter-spacing: 0.05em; text-transform: uppercase; }
+
+  .money-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    padding: 4px 0;
+  }
+
+  .money-item span:first-child { color: var(--muted); }
+  .money-item span:last-child { font-weight: 500; color: var(--ink); }
+
+  .dash-platforms {
+    padding: 1rem 1.25rem;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .platform-tag {
+    padding: 3px 10px;
+    background: #f0ede6;
+    border-radius: 20px;
+    font-size: 11px;
+    color: var(--ink);
+  }
+
+  /* HERO DECORATIVE */
+  .hero-bg-text {
+    position: absolute;
+    bottom: -2rem;
+    right: -1rem;
+    font-family: 'DM Serif Display', serif;
+    font-size: 18rem;
+    color: rgba(15,14,12,0.03);
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* SECTION */
+  section { position: relative; }
+
+  .section-pad { padding: 6rem 4rem; }
+
+  .section-eyebrow {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 1.5rem;
+  }
+
+  .section-eyebrow::before {
+    content: '';
+    width: 24px;
+    height: 1px;
+    background: var(--accent);
+    display: inline-block;
+  }
+
+  h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.5rem;
+  }
+
+  /* DATA SOURCES */
+  .sources-section {
+    background: var(--ink);
+    color: var(--paper);
+    overflow: hidden;
+  }
+
+  .sources-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 5rem 4rem;
+  }
+
+  .sources-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 3rem;
+  }
+
+  .source-item {
+    background: var(--ink);
+    padding: 2rem;
+    transition: background 0.2s;
+    cursor: default;
+  }
+
+  .source-item:hover { background: rgba(255,255,255,0.04); }
+
+  .source-platform {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.1em;
+  }
+
+  .source-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.5rem;
+    color: var(--paper);
+    margin-bottom: 0.75rem;
+  }
+
+  .source-desc {
+    font-size: 13px;
+    color: rgba(245,242,236,0.55);
+    line-height: 1.7;
+  }
+
+  .source-badge {
+    display: inline-block;
+    margin-top: 1rem;
+    padding: 4px 10px;
+    border: 1px solid rgba(200,68,42,0.4);
+    border-radius: 2px;
+    font-size: 11px;
+    color: #e8866f;
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* HOW IT WORKS */
+  .how-section {
+    background: var(--paper);
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .steps-layout {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 4rem;
+    align-items: start;
+    margin-top: 3rem;
+  }
+
+  .steps-intro {
+    position: sticky;
+    top: 120px;
+  }
+
+  .steps-list { display: flex; flex-direction: column; gap: 0; }
+
+  .step-item {
+    display: grid;
+    grid-template-columns: 60px 1fr;
+    gap: 1.5rem;
+    padding: 2rem 0;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    transition: all 0.2s;
+  }
+
+  .step-item:first-child { border-top: 1px solid var(--border); }
+
+  .step-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 3rem;
+    color: rgba(15,14,12,0.08);
+    line-height: 1;
+    transition: color 0.2s;
+  }
+
+  .step-item:hover .step-num { color: var(--accent); }
+
+  .step-content h3 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.4rem;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.01em;
+  }
+
+  .step-content p { font-size: 14px; color: var(--muted); line-height: 1.8; }
+
+  .step-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 0.75rem;
+  }
+
+  .step-tag {
+    padding: 3px 10px;
+    background: rgba(15,14,12,0.06);
+    border-radius: 20px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* VALIDATION DEMO */
+  .demo-section {
+    background: #0f0e0c;
+    color: var(--paper);
+  }
+
+  .demo-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 6rem 4rem;
+  }
+
+  .demo-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    margin-top: 3rem;
+    align-items: start;
+  }
+
+  .demo-input-area {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px;
+    padding: 2rem;
+  }
+
+  .demo-label {
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .demo-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 1.5rem;
+  }
+
+  .demo-chip {
+    padding: 6px 14px;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 2px;
+    font-size: 13px;
+    cursor: pointer;
+    color: rgba(255,255,255,0.65);
+    transition: all 0.15s;
+    background: transparent;
+    font-family: 'Noto Sans JP', sans-serif;
+  }
+
+  .demo-chip:hover,
+  .demo-chip.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+
+  .demo-result {
+    display: none;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .demo-result.show { display: flex; }
+
+  .result-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 14px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 4px;
+  }
+
+  .result-key { font-size: 13px; color: rgba(255,255,255,0.5); }
+  .result-val { font-size: 14px; font-weight: 500; color: var(--paper); }
+
+  .result-val.high { color: #4ade80; }
+  .result-val.med { color: #fbbf24; }
+  .result-val.low { color: #f87171; }
+
+  .score-big {
+    text-align: center;
+    padding: 2rem;
+    background: rgba(200,68,42,0.1);
+    border: 1px solid rgba(200,68,42,0.2);
+    border-radius: 6px;
+    margin-top: 0.5rem;
+  }
+
+  .score-big-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 4rem;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .score-big-label {
+    font-size: 12px;
+    color: rgba(255,255,255,0.5);
+    margin-top: 6px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* LAUNCH KIT */
+  .kit-section {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .kit-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 3rem;
+  }
+
+  .kit-item {
+    background: var(--paper);
+    padding: 2rem 1.75rem;
+    transition: background 0.2s;
+  }
+
+  .kit-item:hover { background: white; }
+
+  .kit-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    margin-bottom: 1.25rem;
+  }
+
+  .kit-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .kit-desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+
+  .kit-items-list {
+    list-style: none;
+    margin-top: 1rem;
+  }
+
+  .kit-items-list li {
+    font-size: 12px;
+    color: var(--muted);
+    padding: 3px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .kit-items-list li::before {
+    content: '—';
+    color: var(--accent);
+    font-size: 10px;
+  }
+
+  /* ROADMAP */
+  .roadmap-section {
+    background: var(--paper);
+  }
+
+  .roadmap-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 6rem 4rem;
+  }
+
+  .roadmap-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 3rem;
+  }
+
+  .roadmap-day {
+    background: var(--paper);
+    padding: 1.5rem 1.25rem;
+    position: relative;
+    transition: background 0.2s;
+  }
+
+  .roadmap-day:hover { background: white; }
+
+  .day-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    margin-bottom: 0.75rem;
+    letter-spacing: 0.1em;
+  }
+
+  .day-task {
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.6;
+  }
+
+  .day-icon {
+    width: 28px;
+    height: 28px;
+    background: rgba(15,14,12,0.06);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    font-size: 13px;
+  }
+
+  /* PRICING */
+  .pricing-section {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .pricing-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 6rem 4rem;
+  }
+
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 3rem;
+  }
+
+  .pricing-card {
+    background: var(--ink);
+    padding: 2.5rem 2rem;
+    position: relative;
+    transition: background 0.2s;
+  }
+
+  .pricing-card:hover { background: rgba(255,255,255,0.02); }
+
+  .pricing-card.featured {
+    background: var(--accent);
+  }
+
+  .plan-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: rgba(255,255,255,0.4);
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+
+  .pricing-card.featured .plan-tag { color: rgba(255,255,255,0.7); }
+
+  .plan-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .plan-price {
+    font-family: 'Space Mono', monospace;
+    font-size: 2.25rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+  }
+
+  .plan-period { font-size: 12px; color: rgba(255,255,255,0.4); margin-bottom: 2rem; }
+  .pricing-card.featured .plan-period { color: rgba(255,255,255,0.65); }
+
+  .plan-features { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+
+  .plan-features li {
+    font-size: 14px;
+    color: rgba(255,255,255,0.65);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    line-height: 1.5;
+  }
+
+  .pricing-card.featured .plan-features li { color: rgba(255,255,255,0.85); }
+
+  .plan-features li::before {
+    content: '✓';
+    color: #4ade80;
+    font-size: 12px;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .pricing-card.featured .plan-features li::before { color: rgba(255,255,255,0.9); }
+
+  .plan-btn {
+    display: block;
+    text-align: center;
+    margin-top: 2rem;
+    padding: 12px;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 2px;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--paper);
+    text-decoration: none;
+    transition: all 0.2s;
+    font-family: 'Noto Sans JP', sans-serif;
+  }
+
+  .plan-btn:hover { background: rgba(255,255,255,0.08); }
+  .pricing-card.featured .plan-btn { background: rgba(255,255,255,0.2); border-color: transparent; }
+  .pricing-card.featured .plan-btn:hover { background: rgba(255,255,255,0.3); }
+
+  /* JAPAN SECTION */
+  .japan-section {
+    background: var(--paper);
+    overflow: hidden;
+  }
+
+  .japan-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 6rem 4rem;
+  }
+
+  .japan-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+    margin-top: 3rem;
+  }
+
+  .japan-features { display: flex; flex-direction: column; gap: 0; }
+
+  .japan-feature {
+    padding: 1.5rem 0;
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: 1rem;
+    align-items: start;
+  }
+
+  .japan-feature:first-child { border-top: 1px solid var(--border); }
+
+  .jf-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    padding-top: 3px;
+  }
+
+  .jf-content h4 {
+    font-weight: 500;
+    font-size: 15px;
+    margin-bottom: 4px;
+  }
+
+  .jf-content p { font-size: 13px; color: var(--muted); line-height: 1.7; }
+
+  .japan-visual {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 16px 48px rgba(15,14,12,0.08);
+  }
+
+  .jv-header {
+    background: var(--ink);
+    padding: 1rem 1.25rem;
+    display: flex;
+    gap: 6px;
+  }
+
+  .jv-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  .jv-content { padding: 1.5rem; }
+
+  .jv-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+
+  .jv-row:last-child { border-bottom: none; }
+  .jv-row span:first-child { color: var(--muted); }
+  .jv-row span:last-child { font-weight: 500; }
+
+
+
+  /* CTA */
+  .cta-section {
+    background: var(--accent);
+    color: white;
+    text-align: center;
+    padding: 6rem 4rem;
+  }
+
+  .cta-section h2 {
+    color: white;
+    font-size: clamp(2rem, 5vw, 4rem);
+    margin-bottom: 1rem;
+  }
+
+  .cta-section p { font-size: 16px; color: rgba(255,255,255,0.75); margin-bottom: 2.5rem; }
+
+  .cta-btn-white {
+    background: white;
+    color: var(--accent);
+    padding: 16px 36px;
+    font-size: 15px;
+    font-weight: 500;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    font-family: 'Noto Sans JP', sans-serif;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .cta-btn-white:hover {
+    background: var(--paper);
+    transform: translateY(-2px);
+  }
+
+  /* FOOTER */
+  footer {
+    background: var(--ink);
+    color: rgba(255,255,255,0.4);
+    padding: 3rem 4rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .footer-logo {
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    color: var(--paper);
+  }
+
+  .footer-logo span { color: var(--accent); }
+
+  .footer-copy { font-size: 12px; }
+
+  .footer-links { display: flex; gap: 1.5rem; }
+  .footer-links a { font-size: 12px; color: rgba(255,255,255,0.4); text-decoration: none; transition: color 0.2s; }
+  .footer-links a:hover { color: var(--paper); }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* TICKER */
+  .ticker-wrap {
+    background: var(--accent);
+    overflow: hidden;
+    padding: 10px 0;
+    white-space: nowrap;
+  }
+
+  .ticker-inner {
+    display: inline-block;
+    animation: ticker 30s linear infinite;
+  }
+
+  .ticker-item {
+    display: inline-block;
+    padding: 0 2rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: rgba(255,255,255,0.8);
+    letter-spacing: 0.1em;
+  }
+
+  .ticker-item strong { color: white; }
+
+  @keyframes ticker {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; }
+    .hero-right { display: none; }
+    nav { padding: 1rem 1.5rem; }
+    .nav-links { display: none; }
+    .section-pad, .sources-inner, .demo-inner, .pricing-inner, .japan-inner, .roadmap-inner { padding: 4rem 1.5rem; }
+    .sources-grid, .kit-grid, .roadmap-grid { grid-template-columns: 1fr; }
+    .pricing-grid { grid-template-columns: 1fr; }
+    .testimonials-grid { grid-template-columns: 1fr; }
+    .japan-grid { grid-template-columns: 1fr; }
+    .demo-grid { grid-template-columns: 1fr; }
+    .hero-left { padding: 5rem 1.5rem 3rem; }
+    .steps-layout { grid-template-columns: 1fr; }
+    .steps-intro { position: static; }
+    footer { flex-direction: column; gap: 1.5rem; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">Trend<span>Base</span>AI</a>
+  <ul class="nav-links">
+    <li><a href="#how">仕組み</a></li>
+    <li><a href="#sources">データソース</a></li>
+    <li><a href="#pricing">料金</a></li>
+    <li><a href="#cta" class="nav-cta">無料で試す</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-left">
+    <div class="eyebrow">日本市場特化型 副業支援ツール</div>
+    <h1>トレンドから<br><em>最初の収益</em>へ<br>7日間で。</h1>
+    <p class="hero-desc">
+      感覚ではなく、データで判断する。Yahoo Japan・TikTok・楽天など日本の主要プラットフォームのトレンドを解析し、副業アイデアの検証から収益化までを一貫支援します。
+    </p>
+    <div class="hero-actions">
+      <a href="#cta" class="btn-primary">無料でアイデアを診断する</a>
+      <a href="#how" class="btn-secondary">仕組みを見る →</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-item">
+        <div class="stat-num">7日</div>
+        <div class="stat-label">最短での収益化</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">8+</div>
+        <div class="stat-label">日本専用データソース</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">無料</div>
+        <div class="stat-label">基本診断</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="dashboard-card">
+      <div class="dash-header">
+        <span class="dash-title">VALIDATION DASHBOARD</span>
+        <span class="dash-live"><span class="live-dot"></span>LIVE</span>
+      </div>
+      <div class="dash-idea">
+        入力アイデア
+        <strong>AIを使った外国人向けビザ申請サポート</strong>
+      </div>
+      <div class="dash-scores">
+        <div class="dash-score-item">
+          <div class="ds-label">需要</div>
+          <div class="ds-val">高</div>
+          <div class="ds-bar"><div class="ds-fill" style="width:82%;background:#1D9E75"></div></div>
+        </div>
+        <div class="dash-score-item">
+          <div class="ds-label">競合</div>
+          <div class="ds-val">中</div>
+          <div class="ds-bar"><div class="ds-fill" style="width:55%;background:#EF9F27"></div></div>
+        </div>
+        <div class="dash-score-item">
+          <div class="ds-label">収益化</div>
+          <div class="ds-val">実証済み</div>
+          <div class="ds-bar"><div class="ds-fill" style="width:78%;background:#1D9E75"></div></div>
+        </div>
+        <div class="dash-score-item">
+          <div class="ds-label">機会スコア</div>
+          <div class="ds-val">高</div>
+          <div class="ds-bar"><div class="ds-fill" style="width:80%;background:#1D9E75"></div></div>
+        </div>
+      </div>
+      <div class="dash-money">
+        <div class="money-title">収益化データ</div>
+        <div class="money-item"><span>相場料金</span><span>¥3,000〜¥15,000/件</span></div>
+        <div class="money-item"><span>月収目安</span><span>¥30,000〜¥80,000</span></div>
+        <div class="money-item"><span>推奨モデル</span><span>スポット＋サブスク</span></div>
+      </div>
+      <div class="dash-platforms">
+        <span class="platform-tag">ココナラ</span>
+        <span class="platform-tag">クラウドワークス</span>
+        <span class="platform-tag">BASE</span>
+        <span class="platform-tag">note</span>
+      </div>
+    </div>
+    <div class="hero-bg-text">AI</div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker-wrap">
+  <div class="ticker-inner">
+    <span class="ticker-item">Yahoo Japan <strong>検索トレンド</strong></span>
+    <span class="ticker-item">TikTok <strong>バイラルトレンド</strong></span>
+    <span class="ticker-item">楽天 <strong>商品ランキング</strong></span>
+    <span class="ticker-item">Amazon Japan <strong>ベストセラー</strong></span>
+    <span class="ticker-item">Twitter/X <strong>リアルタイムトレンド</strong></span>
+    <span class="ticker-item">Google Trends <strong>日本フィルター</strong></span>
+    <span class="ticker-item">cocona <strong>副業マーケット</strong></span>
+    <span class="ticker-item">note <strong>有料記事トレンド</strong></span>
+    <span class="ticker-item">Yahoo Japan <strong>検索トレンド</strong></span>
+    <span class="ticker-item">TikTok <strong>バイラルトレンド</strong></span>
+    <span class="ticker-item">楽天 <strong>商品ランキング</strong></span>
+    <span class="ticker-item">Amazon Japan <strong>ベストセラー</strong></span>
+    <span class="ticker-item">Twitter/X <strong>リアルタイムトレンド</strong></span>
+    <span class="ticker-item">Google Trends <strong>日本フィルター</strong></span>
+    <span class="ticker-item">cocona <strong>副業マーケット</strong></span>
+    <span class="ticker-item">note <strong>有料記事トレンド</strong></span>
+  </div>
+</div>
+
+<!-- DATA SOURCES -->
+<section class="sources-section" id="sources">
+  <div class="sources-inner">
+    <div class="section-eyebrow" style="color:rgba(255,255,255,0.4)">
+      <span style="background:rgba(200,68,42,0.6);width:24px;height:1px;display:inline-block;"></span>
+      日本市場専用データ
+    </div>
+    <h2 style="color:var(--paper)">8つの日本専用<br>データソースを統合</h2>
+    <p style="color:rgba(245,242,236,0.55);max-width:560px;font-size:15px;margin-top:1rem">
+      グローバルツールと違い、日本市場のリアルなデータのみを分析。ローカルに根ざした、信頼性の高いインサイトを提供します。
+    </p>
+
+    <div class="sources-grid">
+      <div class="source-item">
+        <div class="source-platform">SEARCH</div>
+        <div class="source-name">Yahoo! Japan</div>
+        <div class="source-desc">日本最大の検索エンジンのリアルタイム検索トレンドを分析。急上昇ワードと需要の動向を把握します。</div>
+        <div class="source-badge">検索需要</div>
+      </div>
+      <div class="source-item">
+        <div class="source-platform">SOCIAL</div>
+        <div class="source-name">TikTok JP</div>
+        <div class="source-desc">日本のTikTokで急拡散しているトレンドを検知。若年層市場の先端動向をいち早くキャッチします。</div>
+        <div class="source-badge">バイラル検知</div>
+      </div>
+      <div class="source-item">
+        <div class="source-platform">EC</div>
+        <div class="source-name">楽天市場</div>
+        <div class="source-desc">楽天の売上ランキングと商品トレンドを分析。実際に購買が発生しているカテゴリを特定します。</div>
+        <div class="source-badge">購買証拠</div>
+      </div>
+      <div class="source-item">
+        <div class="source-platform">EC</div>
+        <div class="source-name">Amazon Japan</div>
+        <div class="source-desc">Amazonジャパンのベストセラーと急上昇商品を追跡。市場需要の実態データを取得します。</div>
+        <div class="source-badge">市場規模</div>
+      </div>
+      <div class="source-item">
+        <div class="source-platform">SOCIAL</div>
+        <div class="source-name">Twitter/X JP</div>
+        <div class="source-desc">日本語ツイートのトレンドワードと話題の変化を分析。リアルタイムの社会的関心を可視化します。</div>
+        <div class="source-badge">リアルタイム</div>
+      </div>
+      <div class="source-item">
+        <div class="source-platform">SEARCH</div>
+        <div class="source-name">Google Trends</div>
+        <div class="source-desc">日本フィルターで絞り込んだGoogle検索トレンド。長期的な需要推移と季節性を把握します。</div>
+        <div class="source-badge">需要推移</div>
+      </div>
+      <div class="source-item">
+        <div class="source-platform">MARKETPLACE</div>
+        <div class="source-name">ビザスク・クラウドワークス</div>
+        <div class="source-desc">スキルマーケットでの実際の案件数と単価データ。副業としての収益化可能性を定量評価します。</div>
+        <div class="source-badge">収益実績</div>
+      </div>
+      <div class="source-item">
+        <div class="source-platform">CONTENT</div>
+        <div class="source-name">note / Zenn</div>
+        <div class="source-desc">有料記事・コンテンツのトレンドと収益化パターンを分析。知識ビジネスの市場性を評価します。</div>
+        <div class="source-badge">コンテンツ需要</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-section section-pad" id="how">
+  <div style="max-width:1200px;margin:0 auto">
+    <div class="section-eyebrow">仕組み</div>
+    <h2>アイデアから収益まで<br>4つのステップ</h2>
+
+    <div class="steps-layout">
+      <div class="steps-intro reveal">
+        <p style="font-size:15px;color:var(--muted);line-height:1.9">
+          TrendBaseAIは、感覚に頼った起業を終わらせます。データに基づいた検証と、日本市場向けに最適化された実行ステップで、副業の成功確率を最大化します。
+        </p>
+        <div style="margin-top:2rem;padding:1.5rem;background:white;border-radius:4px;border-left:3px solid var(--accent)">
+          <p style="font-size:13px;color:var(--muted);font-style:italic;line-height:1.8">
+            「一定の需要が確認されており、適切な戦略により収益化の可能性があります」
+          </p>
+          <p style="font-size:12px;color:var(--accent);margin-top:0.75rem;font-family:'Space Mono',monospace">— TrendBaseAI バリデーション出力</p>
+        </div>
+      </div>
+
+      <div class="steps-list reveal">
+        <div class="step-item">
+          <div class="step-num">01</div>
+          <div class="step-content">
+            <h3>アイデアを入力</h3>
+            <p>副業アイデアを日本語で自由に入力。具体的でも抽象的でも、AIが意図を解析し適切な市場カテゴリを特定します。</p>
+            <div class="step-tags">
+              <span class="step-tag">自然言語入力</span>
+              <span class="step-tag">日本語対応</span>
+            </div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">02</div>
+          <div class="step-content">
+            <h3>マルチシグナル検証</h3>
+            <p>Yahoo Japan・TikTok・楽天など8つのデータソースを横断分析。需要・競合・収益化の3軸でスコアリングします。</p>
+            <div class="step-tags">
+              <span class="step-tag">需要スコア</span>
+              <span class="step-tag">競合密度</span>
+              <span class="step-tag">収益化証拠</span>
+            </div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">03</div>
+          <div class="step-content">
+            <h3>日本版ローンチキット生成</h3>
+            <p>ランディングページ、SNS告知文、SEO記事、料金表テンプレを自動生成。日本市場に最適化されたコンテンツを即座に取得します。</p>
+            <div class="step-tags">
+              <span class="step-tag">LP生成</span>
+              <span class="step-tag">SNS文章</span>
+              <span class="step-tag">料金設計</span>
+            </div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">04</div>
+          <div class="step-content">
+            <h3>7日間ロードマップで実行</h3>
+            <p>「いつ・何をするか」を1日単位で明示。日本の副業文化（会社員との両立・副業適合性）も考慮した現実的なプランです。</p>
+            <div class="step-tags">
+              <span class="step-tag">日別アクション</span>
+              <span class="step-tag">副業適合性</span>
+              <span class="step-tag">改善提案</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DEMO SECTION -->
+<section class="demo-section">
+  <div class="demo-inner">
+    <div class="section-eyebrow" style="color:rgba(200,68,42,0.7)">
+      <span style="background:rgba(200,68,42,0.5);width:24px;height:1px;display:inline-block"></span>
+      インタラクティブデモ
+    </div>
+    <h2 style="color:var(--paper)">実際に試してみる</h2>
+
+    <div class="demo-grid">
+      <div>
+        <div class="demo-input-area">
+          <div class="demo-label">アイデアを選択</div>
+          <div class="demo-chips">
+            <button class="demo-chip" onclick="showDemo(this,'AIを使った外国人向けビザ申請サポート')">ビザ申請サポート</button>
+            <button class="demo-chip" onclick="showDemo(this,'英語家庭教師オンライン')">英語レッスン</button>
+            <button class="demo-chip" onclick="showDemo(this,'フリーランス通訳・翻訳サービス')">翻訳・通訳</button>
+            <button class="demo-chip" onclick="showDemo(this,'外国人向け不動産仲介サポート')">不動産サポート</button>
+          </div>
+          <p style="font-size:13px;color:rgba(255,255,255,0.35);margin-top:1rem">アイデアを選ぶとリアルタイムで検証結果が表示されます</p>
+        </div>
+      </div>
+
+      <div id="demo-output">
+        <p style="font-size:14px;color:rgba(255,255,255,0.35);text-align:center;padding:3rem 0">← アイデアを選択してください</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LAUNCH KIT -->
+<section class="kit-section section-pad">
+  <div style="max-width:1200px;margin:0 auto">
+    <div class="section-eyebrow reveal">ローンチキット</div>
+    <h2 class="reveal">収益化に必要な<br>全てが揃う</h2>
+    <p class="reveal" style="color:var(--muted);max-width:560px;font-size:15px">ウェブサイトではなく、最初のユーザーを獲得するために必要なものを提供します。</p>
+
+    <div class="kit-grid reveal">
+      <div class="kit-item">
+        <div class="kit-num">01</div>
+        <div class="kit-title">ランディングページ</div>
+        <div class="kit-desc">転換率を重視した日本語LP。ターゲットに刺さるコピーと導線設計。</div>
+        <ul class="kit-items-list">
+          <li>日本語ネイティブコピー</li>
+          <li>モバイル最適化</li>
+          <li>CTAボタン設計</li>
+          <li>ランサーズ・ストアカ対応</li>
+        </ul>
+      </div>
+      <div class="kit-item">
+        <div class="kit-num">02</div>
+        <div class="kit-title">マーケティング文章</div>
+        <div class="kit-desc">X・Instagram・LINE用の告知文3パターン。日本語トーンを調整済み。</div>
+        <ul class="kit-items-list">
+          <li>SNS投稿文（3パターン）</li>
+          <li>ハッシュタグ提案</li>
+          <li>外国人コミュニティ向け</li>
+          <li>丁寧語・論理的トーン</li>
+        </ul>
+      </div>
+      <div class="kit-item">
+        <div class="kit-num">03</div>
+        <div class="kit-title">SEOコンテンツ</div>
+        <div class="kit-desc">日本語キーワードで最適化された記事3本。note・ブログに即掲載可能。</div>
+        <ul class="kit-items-list">
+          <li>ターゲットキーワード分析</li>
+          <li>記事構成と見出し</li>
+          <li>検索意図に合ったコンテンツ</li>
+          <li>内部リンク設計</li>
+        </ul>
+      </div>
+      <div class="kit-item">
+        <div class="kit-num">04</div>
+        <div class="kit-title">7日間実行プラン</div>
+        <div class="kit-desc">1日単位のアクションリスト。副業適合性と会社員との両立を考慮した現実的な計画。</div>
+        <ul class="kit-items-list">
+          <li>日別タスクリスト</li>
+          <li>副業適合性評価</li>
+          <li>改善提案（改善）</li>
+          <li>KPI設定支援</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 7-DAY ROADMAP -->
+<section class="roadmap-section">
+  <div class="roadmap-inner">
+    <div class="section-eyebrow reveal">7日間ロードマップ</div>
+    <h2 class="reveal">明日から始められる<br>具体的なステップ</h2>
+
+    <div class="roadmap-grid reveal">
+      <div class="roadmap-day">
+        <div class="day-label">DAY 1</div>
+        <div class="day-icon">🔍</div>
+        <div class="day-task">競合5社をリサーチし、差別化ポイントを特定する</div>
+      </div>
+      <div class="roadmap-day">
+        <div class="day-label">DAY 2</div>
+        <div class="day-icon">🖥</div>
+        <div class="day-task">ランディングページを作成・公開（BASE or note）</div>
+      </div>
+      <div class="roadmap-day">
+        <div class="day-label">DAY 3</div>
+        <div class="day-icon">📢</div>
+        <div class="day-task">ターゲットSNSで告知投稿（外国人コミュニティ）</div>
+      </div>
+      <div class="roadmap-day">
+        <div class="day-label">DAY 4</div>
+        <div class="day-icon">🛒</div>
+        <div class="day-task">ランサーズ・ストアカに出品・プロフィール最適化</div>
+      </div>
+      <div class="roadmap-day">
+        <div class="day-label">DAY 5</div>
+        <div class="day-icon">💬</div>
+        <div class="day-task">初回ユーザーへ無料相談オファーでフィードバック収集</div>
+      </div>
+      <div class="roadmap-day">
+        <div class="day-label">DAY 6</div>
+        <div class="day-icon">✍️</div>
+        <div class="day-task">SEO記事1本を公開してオーガニック流入を開始</div>
+      </div>
+      <div class="roadmap-day">
+        <div class="day-label">DAY 7</div>
+        <div class="day-icon">📊</div>
+        <div class="day-task">結果を振り返り改善提案を適用。次フェーズを計画</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- JAPAN SPECIFIC -->
+<section class="japan-section">
+  <div class="japan-inner">
+    <div class="section-eyebrow reveal">日本市場特化</div>
+    <h2 class="reveal">日本で副業するなら<br>日本語のツールを使う</h2>
+
+    <div class="japan-grid">
+      <div class="japan-features reveal">
+        <div class="japan-feature">
+          <div class="jf-num">01</div>
+          <div class="jf-content">
+            <h4>副業適合性チェック</h4>
+            <p>必要時間・スキルレベル・会社との利益相反リスクを評価。フルタイムワーカーでも安心して始められます。</p>
+          </div>
+        </div>
+        <div class="japan-feature">
+          <div class="jf-num">02</div>
+          <div class="jf-content">
+            <h4>日本語マネタイズパス</h4>
+            <p>メルカリ・ランサーズ・BASE・noteなど、日本で実際に収益化できるプラットフォームへの具体的な導線を提示します。</p>
+          </div>
+        </div>
+        <div class="japan-feature">
+          <div class="jf-num">03</div>
+          <div class="jf-content">
+            <h4>改善（Kaizen）アプローチ</h4>
+            <p>日本のビジネス文化に根ざした継続的改善の視点。段階的に精度を上げるバージョニングシステムを採用。</p>
+          </div>
+        </div>
+        <div class="japan-feature">
+          <div class="jf-num">04</div>
+          <div class="jf-content">
+            <h4>丁寧・論理的なトーン</h4>
+            <p>「大チャンス！」ではなく、「一定の需要が確認されており…」という論理的・控えめなコミュニケーションで信頼を構築。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="japan-visual reveal">
+        <div class="jv-header">
+          <div class="jv-dot" style="background:#ff5f57"></div>
+          <div class="jv-dot" style="background:#ffbd2e"></div>
+          <div class="jv-dot" style="background:#28c840"></div>
+        </div>
+        <div class="jv-content">
+          <div style="font-size:11px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:1rem;font-family:'Space Mono',monospace">副業適合性レポート</div>
+          <div class="jv-row"><span>アイデア</span><span>AIビザサポート</span></div>
+          <div class="jv-row"><span>必要時間</span><span style="color:var(--accent2)">週10〜15時間</span></div>
+          <div class="jv-row"><span>初期費用</span><span style="color:var(--accent2)">¥0〜¥5,000</span></div>
+          <div class="jv-row"><span>会社との競合リスク</span><span style="color:var(--accent2)">低い</span></div>
+          <div class="jv-row"><span>必要スキル</span><span>コミュニケーション</span></div>
+          <div class="jv-row"><span>推奨プラットフォーム</span><span>ランサーズ / ストアカ</span></div>
+          <div class="jv-row"><span>改善バージョン</span><span>v1 → 特定国に特化</span></div>
+          <div style="margin-top:1.5rem;padding:1rem;background:#f0faf5;border-radius:4px;font-size:13px;color:#085041;line-height:1.7">
+            一定の需要が確認されており、適切な差別化戦略により収益化の可能性があります。フルタイム勤務との両立も現実的と判断されます。
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MONETIZATION PATHS -->
+<section style="background:white">
+  <div style="max-width:1200px;margin:0 auto;padding:6rem 4rem">
+    <div class="section-eyebrow reveal">日本版マネタイズパス</div>
+    <h2 class="reveal">「稼ぎ方」を<br>具体的に示す</h2>
+    <p class="reveal" style="color:var(--muted);max-width:560px;font-size:15px;margin-bottom:3rem">「お金になるかも」ではなく、日本で実際に使われているプラットフォームと価格帯を提示します。</p>
+
+    <div class="reveal" style="display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:4px;overflow:hidden">
+
+      <div style="background:var(--paper);padding:2rem">
+        <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:0.12em;margin-bottom:1rem">スキル販売</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:1.4rem;margin-bottom:0.75rem">ストアカ・ランサーズ・クラウドワークス</div>
+        <p style="font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:1rem">語学・通訳・ビザ相談・ITスキルなどをサービスとして出品。すでに需要のあるマーケットに参入する最速の方法。</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <span style="padding:4px 12px;background:rgba(15,14,12,0.06);border-radius:20px;font-size:12px;color:var(--muted)">¥2,000〜¥15,000/件</span>
+          <span style="padding:4px 12px;background:rgba(15,14,12,0.06);border-radius:20px;font-size:12px;color:var(--muted)">即日出品可</span>
+        </div>
+      </div>
+
+      <div style="background:var(--paper);padding:2rem">
+        <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:0.12em;margin-bottom:1rem">コンテンツ収益</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:1.4rem;margin-bottom:0.75rem">note 有料記事</div>
+        <p style="font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:1rem">知識・経験を有料記事として販売。日本語学習・ビザ・外国人生活などのニッチな知識は需要が高い。</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <span style="padding:4px 12px;background:rgba(15,14,12,0.06);border-radius:20px;font-size:12px;color:var(--muted)">¥300〜¥3,000/記事</span>
+          <span style="padding:4px 12px;background:rgba(15,14,12,0.06);border-radius:20px;font-size:12px;color:var(--muted)">継続収益</span>
+        </div>
+      </div>
+
+      <div style="background:var(--paper);padding:2rem">
+        <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:0.12em;margin-bottom:1rem">物販・転売</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:1.4rem;margin-bottom:0.75rem">メルカリ リセール</div>
+        <p style="font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:1rem">日本と海外をつなぐ輸入・輸出転売。外国人視点で見つけられるニッチな商品は競合が少ない。</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <span style="padding:4px 12px;background:rgba(15,14,12,0.06);border-radius:20px;font-size:12px;color:var(--muted)">利益率10〜40%</span>
+          <span style="padding:4px 12px;background:rgba(15,14,12,0.06);border-radius:20px;font-size:12px;color:var(--muted)">低リスク</span>
+        </div>
+      </div>
+
+      <div style="background:var(--paper);padding:2rem">
+        <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:0.12em;margin-bottom:1rem">ネットショップ</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:1.4rem;margin-bottom:0.75rem">BASE / Shopify</div>
+        <p style="font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:1rem">オリジナル商品やデジタルコンテンツを販売。BASEなら初期費用ゼロで日本語ECショップを開設できる。</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <span style="padding:4px 12px;background:rgba(15,14,12,0.06);border-radius:20px;font-size:12px;color:var(--muted)">初期費用¥0</span>
+          <span style="padding:4px 12px;background:rgba(15,14,12,0.06);border-radius:20px;font-size:12px;color:var(--muted)">スケール可能</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- KAIZEN SECTION -->
+<section style="background:var(--paper)">
+  <div style="max-width:1200px;margin:0 auto;padding:6rem 4rem">
+    <div class="section-eyebrow reveal">改善アプローチ</div>
+    <h2 class="reveal">一度で完璧を<br>目指さない</h2>
+    <p class="reveal" style="color:var(--muted);max-width:560px;font-size:15px;margin-bottom:3rem">日本文化に根ざした継続的改善（改善）の考え方。アイデアは段階的に精度を上げていきます。</p>
+
+    <div class="reveal" style="display:grid;grid-template-columns:repeat(3,1fr);gap:0;background:var(--border);border:1px solid var(--border);border-radius:4px;overflow:hidden;position:relative">
+
+      <div style="background:white;padding:2.5rem 2rem;position:relative">
+        <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:0.12em;margin-bottom:1rem;text-transform:uppercase">Version 1</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:1.6rem;margin-bottom:1rem;color:var(--ink)">広いアイデア</div>
+        <div style="padding:1rem;background:var(--paper);border-radius:4px;font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:1rem">
+          「英語を教えたい」
+        </div>
+        <p style="font-size:13px;color:var(--muted);line-height:1.7">まずデータ取得。需要・競合・収益化の3軸を確認し、進む価値があるか判断します。</p>
+        <div style="position:absolute;right:-16px;top:50%;transform:translateY(-50%);width:32px;height:32px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:14px;z-index:2">→</div>
+      </div>
+
+      <div style="background:white;padding:2.5rem 2rem;position:relative">
+        <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:0.12em;margin-bottom:1rem;text-transform:uppercase">Version 2 — 改善</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:1.6rem;margin-bottom:1rem;color:var(--ink)">ニッチを特定</div>
+        <div style="padding:1rem;background:#fff8f6;border:1px solid rgba(200,68,42,0.15);border-radius:4px;font-size:13px;color:var(--ink);line-height:1.8;margin-bottom:1rem">
+          「在日外国人エンジニア向けビジネス英語」
+        </div>
+        <p style="font-size:13px;color:var(--muted);line-height:1.7">競合が薄く、需要が明確なニッチに絞る。差別化ポイントと価格設定を調整します。</p>
+        <div style="position:absolute;right:-16px;top:50%;transform:translateY(-50%);width:32px;height:32px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:14px;z-index:2">→</div>
+      </div>
+
+      <div style="background:white;padding:2.5rem 2rem">
+        <div style="font-family:'Space Mono',monospace;font-size:10px;color:#2a6e4f;letter-spacing:0.12em;margin-bottom:1rem;text-transform:uppercase">Version 3 — 収益化</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:1.6rem;margin-bottom:1rem;color:var(--ink)">マネタイズ調整</div>
+        <div style="padding:1rem;background:#f0faf5;border:1px solid rgba(42,110,79,0.15);border-radius:4px;font-size:13px;color:var(--ink);line-height:1.8;margin-bottom:1rem">
+          「月額¥3,800のオンライン英語コーチング」
+        </div>
+        <p style="font-size:13px;color:var(--muted);line-height:1.7">初期フィードバックをもとに価格モデルを確定。継続収益につながる形に最適化します。</p>
+      </div>
+
+    </div>
+
+    <div class="reveal" style="margin-top:1.5rem;padding:1.5rem 2rem;background:white;border:1px solid var(--border);border-radius:4px;display:flex;align-items:flex-start;gap:1rem">
+      <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--accent);flex-shrink:0;padding-top:2px">改善</div>
+      <p style="font-size:14px;color:var(--muted);line-height:1.8">このアプローチは日本のビジネス文化に合致しています。一発勝負ではなく、データをもとに段階的に改善することで、リスクを最小化しながら成功確率を高めます。</p>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing-section" id="pricing">
+  <div class="pricing-inner">
+    <div class="section-eyebrow" style="color:rgba(200,68,42,0.7)">
+      <span style="background:rgba(200,68,42,0.5);width:24px;height:1px;display:inline-block"></span>
+      料金プラン
+    </div>
+    <h2 style="color:var(--paper)" class="reveal">最初の一歩は<br>無料で</h2>
+
+    <div class="pricing-grid reveal">
+      <div class="pricing-card">
+        <div class="plan-tag">FREE</div>
+        <div class="plan-name">スタート</div>
+        <div class="plan-price">¥0</div>
+        <div class="plan-period">ずっと無料</div>
+        <ul class="plan-features">
+          <li>アイデア入力・基本バリデーション</li>
+          <li>需要・競合スコア表示</li>
+          <li>主要データソース3つ</li>
+          <li>ローンチキット（一部）</li>
+        </ul>
+        <a href="#cta" class="plan-btn">無料で始める</a>
+      </div>
+
+      <div class="pricing-card featured">
+        <div class="plan-tag">人気プラン</div>
+        <div class="plan-name">プロ</div>
+        <div class="plan-price">¥2,980</div>
+        <div class="plan-period">/月（税込）</div>
+        <ul class="plan-features">
+          <li>全データソース8つ統合分析</li>
+          <li>完全版ローンチキット生成</li>
+          <li>7日間ロードマップ（カスタマイズ）</li>
+          <li>副業適合性レポート</li>
+          <li>改善提案・バージョニング</li>
+          <li>月5アイデアまで診断</li>
+        </ul>
+        <a href="#cta" class="plan-btn">14日間無料で試す</a>
+      </div>
+
+      <div class="pricing-card">
+        <div class="plan-tag">PREMIUM</div>
+        <div class="plan-name">パートナー</div>
+        <div class="plan-price">成果報酬</div>
+        <div class="plan-period">収益の一部</div>
+        <ul class="plan-features">
+          <li>プロプランの全機能</li>
+          <li>投資家・パートナーマッチング</li>
+          <li>高スコアアイデアの優先紹介</li>
+          <li>専任サポート（日本語）</li>
+          <li>無制限アイデア診断</li>
+        </ul>
+        <a href="#cta" class="plan-btn">詳細を問い合わせる</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+<!-- CTA -->
+<section class="cta-section" id="cta">
+  <h2>今日、最初の診断を<br>無料で始める</h2>
+  <p>アイデアを入力するだけ。データが答えを出します。</p>
+  <a href="#" class="cta-btn-white">無料でアイデアを診断する →</a>
+  <p style="margin-top:1.5rem;font-size:12px;color:rgba(255,255,255,0.5)">クレジットカード不要。30秒で診断開始。</p>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Trend<span>Base</span>AI</div>
+  <div class="footer-copy">© 2026 TrendBaseAI. 日本市場特化型副業支援ツール</div>
+  <div class="footer-links">
+    <a href="#">利用規約</a>
+    <a href="#">プライバシー</a>
+    <a href="#">お問い合わせ</a>
+  </div>
+</footer>
+
+<script>
+// Scroll reveal
+const reveals = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if(e.isIntersecting) { e.target.classList.add('visible'); }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+reveals.forEach(r => observer.observe(r));
+
+// ─────────────────────────────────────────────────────────────
+// Backend API connection
+// Change this URL to your deployed backend URL when live
+// Local dev:  http://localhost:3001
+// Deployed:   https://your-app.railway.app  (or Render, Fly.io)
+// ─────────────────────────────────────────────────────────────
+const API_BASE = 'http://localhost:3001';
+
+async function callValidateAPI(idea) {
+  const response = await fetch(`${API_BASE}/api/validate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ idea })
+  });
+  if (!response.ok) throw new Error(`API error: ${response.status}`);
+  return response.json();
+}
+
+function renderAPIResult(data, out) {
+  const s = data.scores;
+  const scoreColor = v => v >= 70 ? '#4ade80' : v >= 45 ? '#fbbf24' : '#f87171';
+  const rows = [
+    { k: '需要', v: s.demand.label, score: s.demand.score },
+    { k: '競合', v: s.competition.label, score: s.competition.score },
+    { k: '収益化', v: s.monetization.label, score: s.monetization.score },
+    { k: 'SNSバズ', v: s.socialBuzz.label, score: s.socialBuzz.score },
+  ];
+
+  const moneyPath = data.monetizationPaths?.[0];
+  const kaizen = data.kaizen;
+  const sourcesBadges = Object.entries(data.sources || {}).map(([name, s]) =>
+    `<span style="padding:2px 8px;border-radius:10px;font-size:10px;background:${s.status==='ok' && !s.mock ? 'rgba(74,222,128,0.15)' : 'rgba(255,255,255,0.07)'};color:${s.status==='ok' && !s.mock ? '#4ade80' : 'rgba(255,255,255,0.35)'};">${name}${s.mock?' (mock)':''}</span>`
+  ).join('');
+
+  out.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="font-size:12px;color:rgba(255,255,255,0.4);font-family:'Space Mono',monospace;letter-spacing:0.1em;text-transform:uppercase">診断結果</div>
+      <div style="padding:12px 14px;background:rgba(255,255,255,0.04);border-radius:4px;font-size:13px;color:rgba(255,255,255,0.6)">${data.idea}</div>
+      ${rows.map(r=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:rgba(255,255,255,0.03);border-radius:4px">
+          <span style="font-size:13px;color:rgba(255,255,255,0.5)">${r.k}</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:60px;height:3px;background:rgba(255,255,255,0.08);border-radius:2px"><div style="width:${r.score}%;height:100%;background:${scoreColor(r.score)};border-radius:2px"></div></div>
+            <span style="font-size:14px;font-weight:500;color:${scoreColor(r.score)};min-width:50px;text-align:right">${r.v}</span>
+          </div>
+        </div>`).join('')}
+      <div style="text-align:center;padding:2rem;background:rgba(200,68,42,0.1);border:1px solid rgba(200,68,42,0.2);border-radius:6px">
+        <div style="font-family:'DM Serif Display',serif;font-size:3.5rem;color:#c8442a;line-height:1">${data.opportunityScore}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:6px;font-family:'Space Mono',monospace">${data.opportunityLabel}</div>
+      </div>
+      ${moneyPath ? `
+      <div style="padding:12px 14px;background:rgba(255,255,255,0.03);border-radius:4px">
+        <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:6px;font-family:'Space Mono',monospace;letter-spacing:0.08em;text-transform:uppercase">推奨マネタイズ</div>
+        <div style="font-size:14px;font-weight:500;color:var(--paper)">${moneyPath.platform}</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-top:2px">${moneyPath.priceRange}</div>
+      </div>` : ''}
+      ${kaizen ? `
+      <div style="padding:12px 14px;background:rgba(255,255,255,0.03);border-radius:4px">
+        <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:8px;font-family:'Space Mono',monospace;letter-spacing:0.08em;text-transform:uppercase">改善ロードマップ</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.55);line-height:1.8">
+          v1: ${kaizen.v1.idea.slice(0,30)}<br>
+          → v2: ${kaizen.v2.idea.slice(0,35)}<br>
+          → v3: ${kaizen.v3.idea.slice(0,35)}
+        </div>
+      </div>` : ''}
+      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">${sourcesBadges}</div>
+    </div>`;
+}
+
+function showDemo(el, idea) {
+  document.querySelectorAll('.demo-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  const out = document.getElementById('demo-output');
+
+  out.innerHTML = `<div style="text-align:center;padding:2rem;color:rgba(255,255,255,0.4);font-size:13px">
+    <div style="width:20px;height:20px;border:2px solid rgba(255,255,255,0.15);border-top-color:#c8442a;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px"></div>
+    APIを照会中...
+  </div>`;
+
+  callValidateAPI(idea)
+    .then(data => renderAPIResult(data, out))
+    .catch(() => {
+      // Backend not running — fallback to inline mock
+      const mock = getMockResult(idea);
+      renderAPIResult(mock, out);
+    });
+}
+
+// Fallback mock (used when backend is not running)
+function getMockResult(idea) {
+  const baseScore = 65 + Math.floor(Math.random() * 20);
+  return {
+    idea,
+    opportunityScore: baseScore,
+    opportunityLabel: baseScore >= 75 ? '高い機会' : '中程度の機会',
+    scores: {
+      demand: { score: baseScore + 5, label: '高い' },
+      competition: { score: 55, label: '中程度' },
+      monetization: { score: baseScore, label: '高い' },
+      socialBuzz: { score: 50, label: '中程度' },
+    },
+    monetizationPaths: [{ platform: 'ランサーズ・ストアカ', priceRange: '¥2,000〜¥15,000/件' }],
+    kaizen: {
+      v1: { idea },
+      v2: { idea: `${idea}（外国人向け特化）` },
+      v3: { idea: `${idea}（月額¥3,800プラン）` },
+    },
+    sources: {
+      rakuten: { status: 'ok', mock: true },
+      googleTrends: { status: 'ok', mock: true },
+      youtube: { status: 'ok', mock: true },
+      tiktok: { status: 'failed', mock: true },
+      twitter: { status: 'failed', mock: true },
+    }
+  };
+}
+</script>
+</body>
+</html>
