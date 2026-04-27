@@ -81,13 +81,29 @@ async function generateWithResilience(trendData, rakutenData) {
     return mockAIResult(trendData);
   }
 
-  const prompt = `Keyword: ${trendData.keyword}. Trend: ${trendData.trend}. Market: ${rakutenData.level}.
-Task: Create a Japanese business plan and a modern Tailwind HTML Landing Page.
-Requirements:
-1. Return ONLY a valid JSON object with no markdown, no backticks, no extra text.
-2. Format: {"plan": {"title": "string", "tagline": "string", "opportunity": "string", "target": "string", "service": "string", "differentiation": ["string"], "revenueModel": "string", "actionPlan": ["string"], "seoKeywords": ["string"], "risk": "string"}, "html": "string"}
-3. The "html" field must be a valid JSON string (escape all double quotes inside the HTML).
-4. The HTML should be a complete, styled landing page using Tailwind CDN.`;
+  const demandLevel = rakutenData?.demandSignal?.level || "Unknown";
+  const prompt = `You are an expert Japanese web designer and business strategist.
+
+Keyword: ${trendData.keyword}
+Trend: ${trendData.trend}
+Market demand: ${demandLevel}
+
+Task: Create a compelling Japanese business plan AND a stunning complete HTML landing page.
+
+Return ONLY raw JSON. No markdown, no backticks, no explanation.
+
+Format: {"plan":{"title":"string","tagline":"string","opportunity":"string","target":"string","service":"string","differentiation":["string","string","string"],"revenueModel":"string","actionPlan":["string","string","string"],"seoKeywords":["string","string","string","string"],"risk":"string"},"html":"string"}
+
+For the html field create a COMPLETE beautiful modern single-page site with inline CSS only (no Tailwind):
+1. HERO: dark gradient background (#0f0c29 to #302b63), large bold Japanese headline, subheadline, glowing green CTA button, subtle animated gradient
+2. PROBLEM section: 3 cards each showing a pain point this keyword solves, dark card background #161b22, border #30363d
+3. FEATURES section: 3-4 feature cards with large emoji icons, feature name, short description, hover lift effect
+4. PRICING section: 3 tiers (フリー / スタンダード / プロ) - middle card highlighted with accent color border and "人気" badge
+5. TESTIMONIALS: 3 realistic Japanese customer quotes with colored circle avatars (initials), star ratings
+6. FOOTER: company name, nav links, copyright 2025
+Design rules: background #0d1117, cards #161b22, accent #00e5a0, text white/#e6edf3, muted #8b949e
+All CSS inline via style attributes. All text Japanese. Make it look premium and real.
+Escape all double quotes in HTML as needed for valid JSON string.`;
 
   let attempts = 0;
   while (attempts < 3) {
