@@ -2,7 +2,7 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const { handleOptions, ok, err } = require('./lib/helpers');
 
 // Using the key you provided
-const GENAI_KEY = "AIzaSyCl1SQyidjQ2_QeGSK1X9LTuXV75Um_duY"; 
+const GENAI_KEY = process.env.GEMINI_API_KEY;
 const genAI = new GoogleGenerativeAI(GENAI_KEY);
 
 module.exports = async function handler(req, res) {
