@@ -32,13 +32,12 @@ async function fetchTrendData(keyword) {
     }));
 
     const avg = values.reduce((s, d) => s + d.value, 0) / values.length;
-    const recentAvg = values.slice(-4).reduce((s, d) => s + d.value, 0) / 4;
+    const recentAvg = values.slice(-4).reduce((s, d) => s + d.value, 0) / Math.max(values.slice(-4).length, 1);
     
     const trend = recentAvg > avg * 1.1 ? "📈 上昇中" : recentAvg < avg * 0.9 ? "📉 下降中" : "➡️ 安定";
 
     return {
       keyword,
-      values,
       avg: Math.round(avg),
       recentAvg: Math.round(recentAvg),
       score: Math.round(recentAvg),
@@ -59,22 +58,14 @@ async function fetchRakutenData(keyword) {
 
   try {
     const r = await axios.get("https://app.rakuten.co.jp/services/api/IchibaItem/Search/20170706", {
-      params: { applicationId: APP_ID, format: "json", keyword, hits: 10, sort: "-reviewCount" },
+      params: { applicationId: APP_ID, format: "json", keyword, hits: 5, sort: "-reviewCount" },
       timeout: 8000,
     });
 
-    const items = (r.data.Items || []).map(i => ({
-      name: i.Item.itemName,
-      price: i.Item.itemPrice,
-      reviewCount: i.Item.reviewCount,
-    }));
-
-    const totalReviews = items.reduce((s, i) => s + (i.reviewCount || 0), 0);
     const itemCount = r.data.count || 0;
-
     const level = itemCount > 10000 ? "非常に高い" : itemCount > 3000 ? "高い" : "中程度";
 
-    return { mock: false, demandSignal: { totalReviews, itemCount, level }, topItems: items.slice(0, 3) };
+    return { mock: false, demandSignal: { itemCount, level } };
   } catch (e) {
     return { mock: true, demandSignal: { level: "エラー", itemCount: 0 } };
   }
@@ -87,10 +78,7 @@ async function fetchYouTubeData(keyword) {
 
   try {
     const r = await axios.get("https://www.googleapis.com/youtube/v3/search", {
-      params: {
-        part: "snippet", q: keyword, type: "video", regionCode: "JP",
-        maxResults: 5, order: "viewCount", key: YT_KEY,
-      },
+      params: { part: "snippet", q: keyword, type: "video", regionCode: "JP", maxResults: 1, key: YT_KEY },
       timeout: 8000,
     });
     return { mock: false, totalResults: r.data.pageInfo?.totalResults || 0 };
@@ -99,30 +87,46 @@ async function fetchYouTubeData(keyword) {
   }
 }
 
-// ── 4. AI Generation (Business Plan & Website) ──────────────────────────────
+// ── 4. AI Generation with Fallback ──────────────────────────────
 async function generateAIPayload(trendData, rakutenData, youtubeData) {
-  const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash",
-    generationConfig: { responseMimeType: "application/json", temperature: 0.7 },
-  });
+  // Try 2.0 Flash first, fallback to 1.5 Flash if 429 occurs
+  const models = ["gemini-2.0-flash", "gemini-1.5-flash"];
+  let lastError;
 
-  const prompt = `
-    キーワード: "${trendData.keyword}"
-    トレンド状況: ${trendData.trend} (スコア: ${trendData.score})
-    市場需要: ${rakutenData.demandSignal.level} (商品数: ${rakutenData.demandSignal.itemCount})
-    YouTube関心度: ${youtubeData.totalResults}件のヒット
+  for (const modelName of models) {
+    try {
+      const model = genAI.getGenerativeModel({
+        model: modelName,
+        generationConfig: { responseMimeType: "application/json", temperature: 0.7 },
+      });
 
-    上記データを分析し、起業家向けのビジネスプランと、Tailwind CSSを使用した1枚完結のランディングページHTMLを生成してください。
-    
-    返却形式 (JSON):
-    {
-      "businessPlan": { "title": "", "opportunity": "", "target": "", "service": "", "revenueModel": "" },
-      "websiteHTML": "<!DOCTYPE html>..."
+      const prompt = `
+        キーワード: "${trendData.keyword}"
+        分析データ: トレンド ${trendData.trend} (スコア ${trendData.score}), 楽天需要 ${rakutenData.demandSignal.level}, YouTube関連数 ${youtubeData.totalResults}
+        
+        任務: 上記データを基に、具体的で斬新なビジネスプランと、Tailwind CSS + Alpine.jsを使用した1枚のモダンなLP（HTML）を生成してください。
+        
+        制約事項:
+        1. 必ず有効なJSON形式で返却すること。
+        2. websiteHTMLは <!DOCTYPE html> から始まる完全なコードであること。
+        3. 日本語で出力すること。
+
+        返却JSON構造:
+        {
+          "businessPlan": { "title": "", "opportunity": "", "target": "", "service": "", "revenueModel": "" },
+          "websiteHTML": ""
+        }
+      `;
+
+      const result = await model.generateContent(prompt);
+      return JSON.parse(result.response.text());
+    } catch (e) {
+      lastError = e;
+      if (e.message.includes("429")) continue; // Try next model
+      throw e;
     }
-  `;
-
-  const result = await model.generateContent(prompt);
-  return JSON.parse(result.response.text());
+  }
+  throw lastError;
 }
 
 // ── Main Handler ─────────────────────────────────────────────────────────────
@@ -132,17 +136,15 @@ module.exports = async (req, res) => {
   const keyword = req.query.keyword?.trim() || "副業";
 
   try {
-    // Phase 1: Fetch all external data in parallel
     const [trend, rakuten, youtube] = await Promise.all([
       fetchTrendData(keyword),
       fetchRakutenData(keyword),
       fetchYouTubeData(keyword),
     ]);
 
-    // Phase 2: Generate AI response based on that data
     const aiResult = await generateAIPayload(trend, rakuten, youtube);
 
-    // Set Cache for 1 hour to save API credits
+    // Caching for Vercel Edge
     res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate');
 
     return ok(res, {
@@ -153,14 +155,12 @@ module.exports = async (req, res) => {
 
   } catch (e) {
     console.error("Critical Error:", e);
-    return err(res, 500, "生成中にエラーが発生しました。");
+    // If we hit a total 429, tell the user to wait
+    const status = e.message.includes("429") ? 429 : 500;
+    return err(res, status, e.message || "内部エラーが発生しました。");
   }
 };
 
-// Helper for Fallback Data
 function mockTrendData(keyword) {
-  return {
-    keyword, mock: true, trend: "➡️ 安定", score: 50,
-    values: [], rising: [], top: []
-  };
+  return { keyword, mock: true, trend: "➡️ 安定", score: 50, rising: [], top: [] };
 }
