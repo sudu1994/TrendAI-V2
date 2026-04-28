@@ -83,39 +83,17 @@
     0%,100% { opacity: 1; box-shadow: 0 0 0 0 rgba(74,222,128,0.4); }
     50% { opacity: 0.7; box-shadow: 0 0 0 4px rgba(74,222,128,0); }
   }
+<!-- TRENDING LIVE TICKER -->
+<div class="ticker-wrap trending-ticker">
+  <div class="tband-label">
+    <span class="live-dot"></span>Trending in Japan
+  </div>
+  <div class="ticker-inner" id="tscroll">
+    <!-- The items will be injected here via JS -->
+    <div class="tloading"><span class="tspin"></span>Loading live trends...</div>
+  </div>
+</div>
 
-  /* ── LIVE TICKER BANNER ── */
-  .ticker-wrap {
-    background: linear-gradient(90deg, var(--surface2), #1a1f35, var(--surface2));
-    border-bottom: 1px solid var(--border);
-    overflow: hidden;
-    padding: 10px 0;
-    white-space: nowrap;
-    position: relative; z-index: 10;
-  }
-  .ticker-wrap::before, .ticker-wrap::after {
-    content: '';
-    position: absolute; top: 0; bottom: 0; width: 80px;
-    z-index: 2; pointer-events: none;
-  }
-  .ticker-wrap::before { left: 0; background: linear-gradient(90deg, var(--bg), transparent); }
-  .ticker-wrap::after  { right: 0; background: linear-gradient(-90deg, var(--bg), transparent); }
-  .ticker-inner {
-    display: inline-block;
-    animation: ticker 35s linear infinite;
-  }
-  .ticker-inner:hover { animation-play-state: paused; }
-  .ticker-item {
-    display: inline-block;
-    padding: 0 2rem;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: rgba(255,255,255,0.5);
-    letter-spacing: 0.05em;
-  }
-  .ticker-item strong { color: var(--accent); }
-  .ticker-sep { color: rgba(0,229,160,0.3); margin: 0 0.5rem; }
-  @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
   /* ── HERO ── */
   .hero {
@@ -844,6 +822,95 @@ function downloadSite() {
   a.href = url; a.download = "SS-AI-site.html";
   a.click(); URL.revokeObjectURL(url);
 }
+  <style>
+  /* ── TRENDING BAND CONTAINER ── */
+  .ticker-wrap.trending-ticker {
+    background: #0d1117;
+    border-bottom: 1px solid #30363d;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    height: 46px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  /* ── LEFT STATIC LABEL ── */
+  .tband-label {
+    display: flex; align-items: center; gap: 7px; padding: 0 1.25rem;
+    background: #161b22; font-size: 10px; font-weight: 700; color: #8b949e;
+    text-transform: uppercase; white-space: nowrap; flex-shrink: 0;
+    border-right: 1px solid #30363d; z-index: 11;
+  }
+
+  /* ── SCROLLING AREA ── */
+  .ticker-inner {
+    display: flex; align-items: center; white-space: nowrap;
+    animation: ticker 60s linear infinite; /* Adjust time for speed */
+  }
+  .ticker-inner:hover { animation-play-state: paused; }
+
+  .titem {
+    display: inline-flex; align-items: center; height: 46px;
+    padding: 0 1.5rem; font-size: 13px; font-weight: 500;
+    color: #c9d1d9; text-decoration: none; border-right: 1px solid #30363d;
+  }
+  .titem:hover { background: rgba(255, 255, 255, 0.05); color: #58a6ff; }
+
+  /* ── LIVE PULSE DOT ── */
+  .live-dot {
+    width: 6px; height: 6px; background: #ff4d4d;
+    border-radius: 50%; animation: pulse-red 2s infinite;
+  }
+
+  @keyframes pulse-red {
+    0% { box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.7); }
+    70% { box-shadow: 0 0 0 6px rgba(255, 77, 77, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 77, 77, 0); }
+  }
+
+  @keyframes ticker {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+</style>
+
+<!-- THE TICKER HTML -->
+<div class="ticker-wrap trending-ticker">
+  <div class="tband-label">
+    <span class="live-dot"></span>Trending in Japan
+  </div>
+  <div id="tscroll" class="ticker-inner">
+    <span style="padding-left: 20px; color: #8b949e;">Fetching latest trends...</span>
+  </div>
+</div>
+
+<script>
+  async function fetchJapanTrends() {
+    const rssUrl = "https://google.co.jp";
+    const proxyUrl = `https://rss2json.com{encodeURIComponent(rssUrl)}`;
+    
+    try {
+      const response = await fetch(proxyUrl);
+      const data = await response.json();
+      
+      if (data.status === 'ok') {
+        const items = data.items.map(item => `<div class="titem">${item.title}</div>`).join('');
+        // Duplicate content for a seamless infinite loop
+        document.getElementById('tscroll').innerHTML = items + items;
+      }
+    } catch (error) {
+      console.error("Error fetching trends:", error);
+      document.getElementById('tscroll').innerHTML = '<div class="titem">Trend service currently unavailable</div>';
+    }
+  }
+
+  // Load trends on startup
+  fetchJapanTrends();
+  // Refresh every 15 minutes
+  setInterval(fetchJapanTrends, 900000);
+</script>
+
 </script>
 </body>
 </html>
