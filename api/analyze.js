@@ -149,33 +149,84 @@ async function fetchYahooShoppingData(keyword) {
   }
 }
 
-// ── 5. e-Stat 政府統計 (地域・産業データ) ────────────────────────────────────
+// ── 5. e-Stat 統計ダッシュボード API ────────────────────────────────────────
+// Source: https://dashboard.e-stat.go.jp/api
+// • No API key required (登録不要)
+// • CORS-enabled on JSON endpoints — can be called from browser or server
+// • Uses getIndicatorInfo (series search) → getData (time-series values)
+// • ~6,000 series covering employment, housing, industry, prices, population
 async function fetchEStatData(keyword) {
-  const APP_ID = process.env.ESTAT_APP_ID;
-  if (!APP_ID) return { mock: true, statsCount: 0, relatedStats: [] };
+  const DASHBOARD_BASE = "https://dashboard.e-stat.go.jp/api/1.0/Json";
+
   try {
-    const r = await axios.get("https://api.e-stat.go.jp/rest/3.0/app/json/getStatsList", {
+    // ① Search for indicator series matching the keyword
+    const searchRes = await axios.get(`${DASHBOARD_BASE}/getIndicatorInfo`, {
       params: {
-        appId: APP_ID,
-        searchWord: keyword,
-        lang: "J",
-        limit: 5,
+        IndicatorCode: "",       // empty = search by word
+        SearchWord: keyword,     // free-word search across all series
+        Lang: "JP",
+        Limit: 5,
       },
-      timeout: 6000,
+      timeout: 8000,
     });
-    const list = r.data?.GET_STATS_LIST?.DATALIST_INF?.TABLE_INF;
-    const items = Array.isArray(list) ? list : list ? [list] : [];
+
+    const indicators = searchRes.data?.GET_STATS?.INDICATOR_INF?.RESULT_INF?.ROW;
+    const rows = Array.isArray(indicators) ? indicators : indicators ? [indicators] : [];
+
+    if (!rows.length) {
+      return { mock: false, statsCount: 0, relatedStats: [], seriesData: null };
+    }
+
+    // ② Fetch the latest time-series data for the top matching series
+    const topCode = rows[0]?.["@code"] || rows[0]?.INDICATOR_CODE;
+    let seriesData = null;
+
+    if (topCode) {
+      try {
+        const dataRes = await axios.get(`${DASHBOARD_BASE}/getData`, {
+          params: {
+            IndicatorCode: topCode,
+            // 全国 (Japan national) = RegionCode 00000
+            RegionCode: "00000",
+            Lang: "JP",
+            Limit: 6,          // last 6 time points
+            SortOrder: "desc", // newest first
+          },
+          timeout: 8000,
+        });
+
+        const dataPoints = dataRes.data?.GET_STATS?.STATISTICAL_DATA?.DATA_INF?.VALUE;
+        const pts = Array.isArray(dataPoints) ? dataPoints : dataPoints ? [dataPoints] : [];
+
+        if (pts.length) {
+          seriesData = {
+            name: rows[0]?.INDICATOR_NAME || rows[0]?.["@name"] || keyword,
+            unit: rows[0]?.UNIT || "",
+            points: pts.slice(0, 6).reverse().map((p) => ({
+              time: p["@time"] || p.TIME || "—",
+              value: parseFloat(p["$"] || p.VALUE || 0),
+            })),
+          };
+        }
+      } catch {
+        // getData failed — still return indicator list
+      }
+    }
+
     return {
       mock: false,
-      statsCount: items.length,
-      relatedStats: items.slice(0, 3).map((s) => ({
-        title: s.TITLE?.["$"] || s.TITLE || "—",
-        org:   s.STATISTICS_NAME || "—",
-        date:  s.SURVEY_DATE || "—",
+      statsCount: rows.length,
+      relatedStats: rows.slice(0, 3).map((r) => ({
+        title: r.INDICATOR_NAME || r["@name"] || "—",
+        code:  r["@code"] || r.INDICATOR_CODE || "—",
+        unit:  r.UNIT || "—",
+        cycle: r.DATA_CYCLE || "—",
       })),
+      seriesData,
     };
+
   } catch {
-    return { mock: true, statsCount: 0, relatedStats: [] };
+    return { mock: true, statsCount: 0, relatedStats: [], seriesData: null };
   }
 }
 

@@ -155,12 +155,20 @@ Vercel ダッシュボード → Settings → Environment Variables に設定し
 |---|---|---|
 | `SERPAPI_KEY` | 推奨 | Google Trends データ取得（未設定時はモックデータ） |
 | `RAKUTEN_APP_ID` | 推奨 | 楽天市場データ（未設定時はモックデータ） |
-| `YOUTUBE_API_KEY` | 任意 | YouTube Japan トレンド動画 |
-| `GROQ_API_KEY` | 推奨 | AIビジネスプラン生成（未設定時はモック） |
+| `YOUTUBE_API_KEY` | 推奨 | YouTube キーワード検索（未設定時はモック） |
+| `GROQ_API_KEY` | 推奨 | AIビジネスプラン生成 llama-3.3-70b（未設定時はモック） |
+| `CLAUDE_API_KEY` | 推奨 | Claude 3.5 Sonnet サイト生成（未設定時はGroqフォールバック） |
+| `YAHOO_CLIENT_ID` | 任意 | Yahoo! ショッピングJP 価格・需要データ |
+| `HOT_PEPPER_KEY` | 任意 | Hot Pepper グルメ集客データ |
 
-**BYOKキー（ユーザーがブラウザで設定）:**  
-`CLAUDE_API_KEY` と `GEMINI_API_KEY` は環境変数ではなく、  
-各ユーザーが ⚙ 設定画面から入力します。サーバーには保存されません。
+> **⚠ e-Stat 統計ダッシュボードは API キー不要です**  
+> `https://dashboard.e-stat.go.jp/api` は登録なしで誰でも使えます。  
+> 環境変数の設定は不要 — `analyze.js` が直接呼び出します。  
+> 約6,000系列（就業・住宅・産業・物価・人口など）を提供。
+
+**BYOKキー（ユーザーがブラウザ⚙で設定）:**  
+`GEMINI_API_KEY` のみ — ユーザーが設定画面から入力します。  
+`CLAUDE_API_KEY` はサーバー側（Vercel環境変数）で管理します。
 
 ---
 

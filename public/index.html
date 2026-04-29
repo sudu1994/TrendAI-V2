@@ -481,13 +481,18 @@ footer{text-align:center;padding:30px 20px 22px;color:var(--muted);font-size:12p
       </div>
       <div id="yahooTopSellers" style="margin-top:10px;"></div>
     </div>
-    <!-- e-Stat -->
+    <!-- e-Stat 統計ダッシュボード — no API key required -->
     <div class="data-source-card estat">
-      <div class="ds-header"><div class="ds-title"><span>📊</span>e-Stat 政府統計</div><span class="ds-live-badge" id="estatBadge">—</span></div>
-      <div class="ds-metrics">
-        <div class="ds-metric" style="grid-column:1/-1;"><div class="ds-metric-val" id="estatCount">—</div><div class="ds-metric-lbl">関連統計数</div></div>
+      <div class="ds-header">
+        <div class="ds-title"><span>📊</span>e-Stat 統計ダッシュボード</div>
+        <span class="ds-live-badge" id="estatBadge">—</span>
       </div>
-      <div id="estatList" style="margin-top:10px;"></div>
+      <div class="ds-metrics">
+        <div class="ds-metric"><div class="ds-metric-val" id="estatCount">—</div><div class="ds-metric-lbl">関連系列数</div></div>
+        <div class="ds-metric"><div class="ds-metric-val" id="estatUnit">—</div><div class="ds-metric-lbl">単位</div></div>
+      </div>
+      <div id="estatSeries" style="margin-top:8px;font-size:11px;color:var(--accent);font-family:var(--fm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+      <div id="estatList" style="margin-top:8px;"></div>
     </div>
   </div>
 
@@ -967,21 +972,46 @@ function renderDS(rakuten, youtube, yahoo, estat){
     document.getElementById('yahooAvgPrice').textContent='—';
   }
 
-  // ── e-Stat ──
+  // ── e-Stat 統計ダッシュボード (no key required) ──
   const eb=document.getElementById('estatBadge');
   if(estat&&!estat.mock){
     eb.textContent='LIVE DATA';eb.className='ds-live-badge live';
     document.getElementById('estatCount').textContent=estat.statsCount||0;
-    if(estat.relatedStats?.length){
-      document.getElementById('estatList').innerHTML=estat.relatedStats.slice(0,2).map(s=>
-        `<div style="font-size:11px;color:var(--muted);padding:2px 0;line-height:1.4;border-bottom:1px solid rgba(255,255,255,.04)">
-          📊 ${(s.title||'').slice(0,40)}${(s.title||'').length>40?'…':''}
-        </div>`
-      ).join('');
+
+    // Show top series name + unit
+    const top=estat.seriesData;
+    if(top){
+      document.getElementById('estatUnit').textContent=top.unit||'—';
+      document.getElementById('estatSeries').textContent=top.name;
+      // Render mini time-series table
+      if(top.points?.length){
+        document.getElementById('estatList').innerHTML=
+          `<div style="display:grid;grid-template-columns:repeat(${Math.min(top.points.length,6)},1fr);gap:4px;margin-top:6px">` +
+          top.points.slice(0,6).map(p=>
+            `<div style="text-align:center;background:rgba(0,229,160,.06);border-radius:5px;padding:4px 2px">
+              <div style="font-size:10px;color:var(--accent);font-weight:700;font-family:var(--fm)">${p.value.toLocaleString()}</div>
+              <div style="font-size:9px;color:var(--muted)">${String(p.time).slice(0,7)}</div>
+            </div>`
+          ).join('') + '</div>';
+      }
+    } else {
+      document.getElementById('estatUnit').textContent='—';
+      // Show indicator list if no series data
+      if(estat.relatedStats?.length){
+        document.getElementById('estatList').innerHTML=estat.relatedStats.slice(0,3).map(s=>
+          `<div style="font-size:11px;color:var(--muted);padding:3px 0;border-bottom:1px solid rgba(255,255,255,.04);line-height:1.4">
+            <span style="color:var(--accent);font-family:var(--fm);font-size:9px;margin-right:4px">${s.cycle||''}</span>${(s.title||'').slice(0,38)}${(s.title||'').length>38?'…':''}
+          </div>`
+        ).join('');
+      }
     }
   }else{
-    eb.textContent='MOCK';eb.className='ds-live-badge mock';
-    document.getElementById('estatCount').textContent='—';
+    eb.textContent= estat?.mock===false ? 'NO DATA' : 'FREE API';
+    eb.className='ds-live-badge '+(estat?.mock===false?'mock':'live');
+    document.getElementById('estatCount').textContent='0';
+    document.getElementById('estatUnit').textContent='—';
+    document.getElementById('estatSeries').textContent='キーワードに一致する系列なし';
+    document.getElementById('estatList').textContent='';
   }
 }
 
