@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src https://fonts.gstatic.com; connect-src 'self' https://generativelanguage.googleapis.com https://app.rakuten.co.jp; frame-src 'self' blob:; img-src 'self' data:; object-src 'none'; base-uri 'self';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src https://fonts.gstatic.com; connect-src 'self' https://generativelanguage.googleapis.com; frame-src 'self' blob:; img-src 'self' data:; object-src 'none'; base-uri 'self';">
 <title>SSI AI — アイデアを、ビジネスへ。</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -210,7 +210,9 @@ header{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify
 .data-source-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;position:relative;overflow:hidden}
 .data-source-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
 .data-source-card.rakuten::before{background:linear-gradient(90deg,#e6000d,#ff6b35)}
-.data-source-card.youtube::before{background:linear-gradient(90deg,#ff0000,#ff6b35)}
+.data-source-card.youtube::before{background:linear-gradient(90deg,#ff0000,#ff4444)}
+.data-source-card.yahoo-shop::before{background:linear-gradient(90deg,#ff0033,#ff6b35)}
+.data-source-card.estat::before{background:linear-gradient(90deg,var(--accent2),#00e5a0)}
 .ds-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .ds-title{display:flex;align-items:center;gap:8px;font-family:var(--fd);font-size:13px;font-weight:700}
 .ds-live-badge{font-size:9px;font-family:var(--fm);padding:2px 8px;border-radius:10px;font-weight:600;letter-spacing:.5px}
@@ -296,14 +298,14 @@ footer{text-align:center;padding:30px 20px 22px;color:var(--muted);font-size:12p
 
         <div class="sec-notice">
           <strong>Security:</strong> Keys are AES-256-GCM encrypted before localStorage. Master password never leaves your device.
-          Claude calls route through <code>/api/proxy</code> (zero-log). RESAS similarly proxied. Use restricted-scope keys.
+          Gemini key is AES-256-GCM encrypted locally. Claude runs server-side via CLAUDE_API_KEY in Vercel — never exposed to the browser.
         </div>
 
         <div id="keyFields"></div>
 
         <div class="rate-wrap">
           <div class="rate-label">
-            <span>Claude calls this session</span>
+            <span>Claude 3.5 Sonnet calls this session</span>
             <span id="rateCount">0 / 10</span>
           </div>
           <div class="rate-track"><div class="rate-fill" id="rateFill" style="width:0%"></div></div>
@@ -330,7 +332,7 @@ footer{text-align:center;padding:30px 20px 22px;color:var(--muted);font-size:12p
               <div class="spend-stat-lbl">Searches</div>
             </div>
             <div class="spend-stat">
-              <div class="spend-stat-val" id="statPerSearch">¥9.10</div>
+              <div class="spend-stat-val" id="statPerSearch">¥45</div>
               <div class="spend-stat-lbl">Per Search</div>
             </div>
             <div class="spend-stat">
@@ -340,7 +342,7 @@ footer{text-align:center;padding:30px 20px 22px;color:var(--muted);font-size:12p
           </div>
 
           <div class="budget-warning-box" id="budgetWarnBox">
-            ⚠ You have reached your ¥3,000 monthly cap. Claude is disabled.
+            ⚠ You have reached your ¥3,000 monthly cap. Claude site generation is paused.
             Click Reset Month to continue (only do this if a new billing period has started),
             or use the free <strong>Gemini AI</strong> option instead.
           </div>
@@ -351,7 +353,7 @@ footer{text-align:center;padding:30px 20px 22px;color:var(--muted);font-size:12p
           <div class="console-step"><span class="num">1</span><span>Go to <strong style="color:var(--text)">console.anthropic.com</strong> → Settings → Billing → Limits</span></div>
           <div class="console-step"><span class="num">2</span><span>Set <strong style="color:var(--text)">Monthly Budget</strong> to <strong style="color:var(--accent)">$18.00</strong> (≈ ¥2,800–¥3,000)</span></div>
           <div class="console-step"><span class="num">3</span><span>The API key auto-stops when the limit is hit — protects your wallet even if this app malfunctions</span></div>
-          <div class="console-step"><span class="num">4</span><span>This app tracks ~¥9.10/search as a <strong style="color:var(--text)">soft safety net</strong> — the console cap is the hard guarantee</span></div>
+          <div class="console-step"><span class="num">4</span><span>This app tracks ~¥45/search as a <strong style="color:var(--text)">soft safety net</strong> — the console cap is the hard guarantee</span></div>
         </div>
       </div>
     </div>
@@ -379,23 +381,26 @@ footer{text-align:center;padding:30px 20px 22px;color:var(--muted);font-size:12p
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-eyebrow">🔥 Google Trends × Rakuten × YouTube × Claude AI</div>
+  <div class="hero-eyebrow">🔥 Google Trends × Rakuten × YouTube × Yahoo! JP × e-Stat × Claude AI</div>
   <h1>アイデアを、<br><span class="hl">ビジネスへ。</span></h1>
   <p>キーワードを入れるだけ。<br>Google トレンド・楽天市場・YouTube のデータを統合し、<br>市場分析・事業計画・Webサイトを一瞬で生成します。</p>
 
   <div class="api-chips">
     <div class="api-chip"><span class="chip-dot" style="background:#4ade80"></span>Google Trends</div>
-    <div class="api-chip"><span class="chip-dot" style="background:var(--accent3)"></span>楽天市場 API</div>
-    <div class="api-chip"><span class="chip-dot" style="background:var(--accent2)"></span>YouTube Data API</div>
-    <div class="api-chip"><span class="chip-dot" style="background:#a78bfa"></span>Gemini AI (Free)</div>
-    <div class="api-chip"><span class="chip-dot" style="background:var(--accent)"></span>Claude AI (BYOK)</div>
+    <div class="api-chip"><span class="chip-dot" style="background:#e6000d"></span>楽天市場 API</div>
+    <div class="api-chip"><span class="chip-dot" style="background:#ff0000"></span>YouTube Data API</div>
+    <div class="api-chip"><span class="chip-dot" style="background:#ff0033"></span>Yahoo! Shopping JP</div>
+    <div class="api-chip"><span class="chip-dot" style="background:var(--accent2)"></span>e-Stat 政府統計</div>
+    <div class="api-chip"><span class="chip-dot" style="background:#ff6b35"></span>Hot Pepper</div>
+    <div class="api-chip"><span class="chip-dot" style="background:#a78bfa"></span>Gemini AI <span style="font-size:9px;opacity:.6">(BYOK)</span></div>
+    <div class="api-chip"><span class="chip-dot" style="background:var(--accent)"></span>Claude 3.5 Sonnet</div>
   </div>
 
   <div class="nokey-banner" id="nokeyBanner" onclick="openSettings('keys')">
-    ⚠ Claude APIキー未設定 — クリックして設定するか、無料のGemini AIで続行できます
+    ⚠ Gemini APIキー未設定 — クリックして設定してください（Geminiは無料で取得できます）
   </div>
   <div class="budget-capped-banner hidden" id="cappedBanner" onclick="openSettings('budget')">
-    🚫 月額¥3,000上限に達しました。Claude は無効化されています。クリックして詳細を確認。
+    🚫 月額¥3,000上限に達しました。Claudeサイト生成は一時停止中です。クリックして詳細を確認。
   </div>
 
   <div class="search-wrap">
@@ -419,7 +424,7 @@ footer{text-align:center;padding:30px 20px 22px;color:var(--muted);font-size:12p
     <li class="step-item" id="s1"><span class="step-icon">📡</span> Google Trends データ取得中...</li>
     <li class="step-item" id="s2"><span class="step-icon">🛒</span> 楽天市場・YouTube データ照合中...</li>
     <li class="step-item" id="s3"><span class="step-icon">🧠</span> AIがアイデアを分析中...</li>
-    <li class="step-item" id="s4"><span class="step-icon">🌐</span> Claude がWebサイトを生成中...</li>
+    <li class="step-item" id="s4"><span class="step-icon">🌐</span> Claude 3.5 Sonnet がWebサイトを生成中...</li>
   </ul>
 </div>
 
@@ -445,6 +450,7 @@ footer{text-align:center;padding:30px 20px 22px;color:var(--muted);font-size:12p
   </div>
 
   <div class="data-sources-row" id="dataSourcesRow" style="display:none;">
+    <!-- Rakuten -->
     <div class="data-source-card rakuten">
       <div class="ds-header"><div class="ds-title"><span>🛒</span>楽天市場</div><span class="ds-live-badge" id="rakutenBadge">—</span></div>
       <div class="ds-metrics">
@@ -454,12 +460,34 @@ footer{text-align:center;padding:30px 20px 22px;color:var(--muted);font-size:12p
         <div class="ds-metric"><div class="ds-metric-val" id="rakutenReviews">—</div><div class="ds-metric-lbl">総レビュー数</div></div>
       </div>
     </div>
+    <!-- YouTube — keyword-focused search -->
     <div class="data-source-card youtube">
-      <div class="ds-header"><div class="ds-title"><span>▶️</span>YouTube Japan</div><span class="ds-live-badge" id="youtubeBadge">—</span></div>
-      <div class="ds-metrics">
-        <div class="ds-metric" style="grid-column:1/-1;"><div class="ds-metric-val" id="youtubeResults">—</div><div class="ds-metric-lbl">過去6ヶ月の動画数</div></div>
+      <div class="ds-header">
+        <div class="ds-title"><span>▶️</span>YouTube Japan <span id="ytKeywordLabel" style="font-size:10px;color:var(--muted);font-family:var(--fm);font-weight:400;margin-left:4px"></span></div>
+        <span class="ds-live-badge" id="youtubeBadge">—</span>
       </div>
-      <div id="ytChannels" style="margin-top:12px;"></div>
+      <div class="ds-metrics">
+        <div class="ds-metric"><div class="ds-metric-val" id="youtubeResults">—</div><div class="ds-metric-lbl">マッチ動画数</div></div>
+        <div class="ds-metric"><div class="ds-metric-val" id="youtubeAvgViews">—</div><div class="ds-metric-lbl">平均再生数</div></div>
+      </div>
+      <div id="ytChannels" style="margin-top:10px;"></div>
+    </div>
+    <!-- Yahoo! Shopping JP -->
+    <div class="data-source-card yahoo-shop">
+      <div class="ds-header"><div class="ds-title"><span>🛍️</span>Yahoo! ショッピング</div><span class="ds-live-badge" id="yahooBadge">—</span></div>
+      <div class="ds-metrics">
+        <div class="ds-metric"><div class="ds-metric-val" id="yahooHits">—</div><div class="ds-metric-lbl">出品数</div></div>
+        <div class="ds-metric"><div class="ds-metric-val" id="yahooAvgPrice">—</div><div class="ds-metric-lbl">平均価格</div></div>
+      </div>
+      <div id="yahooTopSellers" style="margin-top:10px;"></div>
+    </div>
+    <!-- e-Stat -->
+    <div class="data-source-card estat">
+      <div class="ds-header"><div class="ds-title"><span>📊</span>e-Stat 政府統計</div><span class="ds-live-badge" id="estatBadge">—</span></div>
+      <div class="ds-metrics">
+        <div class="ds-metric" style="grid-column:1/-1;"><div class="ds-metric-val" id="estatCount">—</div><div class="ds-metric-lbl">関連統計数</div></div>
+      </div>
+      <div id="estatList" style="margin-top:10px;"></div>
     </div>
   </div>
 
@@ -484,11 +512,13 @@ footer{text-align:center;padding:30px 20px 22px;color:var(--muted);font-size:12p
 <footer>
   <div class="footer-services">
     <div class="footer-service"><span class="fs-dot" style="background:#4ade80"></span>Google Trends</div>
-    <div class="footer-service"><span class="fs-dot" style="background:var(--accent3)"></span>楽天市場 API</div>
+    <div class="footer-service"><span class="fs-dot" style="background:#e6000d"></span>楽天市場 API</div>
     <div class="footer-service"><span class="fs-dot" style="background:#f00"></span>YouTube Data API</div>
+    <div class="footer-service"><span class="fs-dot" style="background:#ff0033"></span>Yahoo! Shopping JP</div>
+    <div class="footer-service"><span class="fs-dot" style="background:var(--accent2)"></span>e-Stat 政府統計</div>
+    <div class="footer-service"><span class="fs-dot" style="background:#ff6b35"></span>Hot Pepper</div>
     <div class="footer-service"><span class="fs-dot" style="background:#a78bfa"></span>Gemini AI</div>
-    <div class="footer-service"><span class="fs-dot" style="background:var(--accent)"></span>Claude AI</div>
-    <div class="footer-service"><span class="fs-dot" style="background:var(--accent2)"></span>SerpAPI</div>
+    <div class="footer-service"><span class="fs-dot" style="background:var(--accent)"></span>Claude 3.5 Sonnet</div>
   </div>
   <div class="footer-bottom">
     <span>SSI-AI</span><span class="footer-sep">|</span><span>© 2026</span>
@@ -541,7 +571,7 @@ async function unlockVault() {
   if (!pwd) { setStatus(el,'err','パスワードを入力してください'); return; }
   try {
     _vaultKey = await deriveVaultKey(pwd, deviceSalt());
-    const test = localStorage.getItem(NS+'claude');
+    const test = localStorage.getItem(NS+'gemini');
     if (test) await decrypt(test, _vaultKey); // verify password
     setStatus(el,'ok','✓ Vault unlocked — keys decrypted');
     await loadFieldsFromVault();
@@ -567,9 +597,9 @@ function hasStored(svc) { return Boolean(localStorage.getItem(NS+svc)); }
 
 /* ── 2. ¥3,000 BUDGET TRACKER ─────────────────────────────────────────────
    Challenge #5 mitigation — tracks estimated JPY spend in localStorage.
-   ¥9.10 per search = (1500 input + 3500 output) × $0.001/1k × ~150 JPY/USD  */
+   ¥45 per search = Claude 3.5 Sonnet ~4k tokens × $0.003/1k × 150¥/$  */
 const BUDGET_CAP   = 3000;     // ¥
-const COST_PER_REQ = 9.10;     // ¥ per Claude call (~5k tokens)
+const COST_PER_REQ = 45;     // ¥ per search — Claude 3.5 Sonnet (4k tokens input+output × ~$0.003/1k × 150¥/$)
 const BUDGET_KEY   = NS + 'budget_v1';
 
 function getBudget() {
@@ -633,7 +663,7 @@ function refreshBudgetUI() {
 }
 
 /* ── 3. CLIENT-SIDE RATE LIMITER ───────────────────────────────────────────
-   Challenge #5: hard session cap of 10 Claude calls — stops runaway loops  */
+   Challenge #5: hard session cap of 10 Claude 3.5 Sonnet site-gen calls — stops runaway spend  */
 const RATE_MAX = 10;
 let rateUsed = 0;
 function consumeRate() {
@@ -647,10 +677,7 @@ function consumeRate() {
 
 /* ── 4. SERVICES ────────────────────────────────────────────────────────────*/
 const SERVICES = [
-  { id:'gemini',  name:'Gemini API',      sub:'Google AI Studio',  icon:'◈', desc:'AI分析・ビジネスプラン生成 (無料)', docs:'https://aistudio.google.com/app/apikey',           ph:'AIza••••••••••••••••••••••••••••' },
-  { id:'claude',  name:'Claude API',      sub:'Anthropic Console', icon:'◉', desc:'Webサイト生成 /api/proxy 経由 (BYOK)', docs:'https://console.anthropic.com/settings/keys',  ph:'sk-ant-api03-••••••••••••••••' },
-  { id:'rakuten', name:'Rakuten Ichiba',  sub:'App ID',            icon:'◆', desc:'市場需要・競合価格 (楽天市場)',      docs:'https://webservice.rakuten.co.jp/',             ph:'1234567890' },
-  { id:'resas',   name:'RESAS API',       sub:'X-API-KEY',         icon:'◇', desc:'地域経済分析 /api/proxy 経由',      docs:'https://opendata.resas-portal.go.jp/form.html', ph:'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' },
+  { id:'gemini', name:'Gemini 1.5 Flash', sub:'Google AI Studio', icon:'◈', desc:'補助AI分析 · 無料で取得可能', docs:'https://aistudio.google.com/app/apikey', ph:'AIza••••••••••••••••••••••••••••' },
 ];
 const fstate = {};
 
@@ -731,9 +758,6 @@ async function testKey(id) {
   let r;
   try {
     if(id==='gemini')  r=await pingGemini(val);
-    if(id==='claude')  r=await pingClaude(val);
-    if(id==='rakuten') r=await pingRakuten(val);
-    if(id==='resas')   r=await pingResas(val);
   } catch(e){r={ok:false,msg:e.message};}
   setKSt(id,r.ok?'ok':'err',(r.ok?'✓ ':' ✗ ')+r.msg);
   document.getElementById('kt-'+id).disabled=false;
@@ -745,52 +769,12 @@ async function pingGemini(key) {
   const d=await r.json();
   return r.ok?{ok:true,msg:'Gemini OK'}:{ok:false,msg:d?.error?.message||'HTTP '+r.status};
 }
-async function pingClaude(key) {
-  const r=await fetch('/api/proxy',{method:'POST',headers:{'Content-Type':'application/json','x-target':'claude','x-fwd-key':key},
-    body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:10,messages:[{role:'user',content:'Hi'}]})});
-  const d=await r.json();
-  return r.ok?{ok:true,msg:'Claude OK via proxy'}:{ok:false,msg:d?.error?.message||'HTTP '+r.status};
-}
-async function pingRakuten(appId) {
-  const u=new URL('https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601');
-  u.searchParams.set('applicationId',appId);u.searchParams.set('keyword','test');u.searchParams.set('hits','1');u.searchParams.set('format','json');
-  const r=await fetch(u); const d=await r.json();
-  return(r.ok&&!d.error)?{ok:true,msg:`Rakuten OK — ${(d.count||0).toLocaleString()}件`}:{ok:false,msg:d.error||'HTTP '+r.status};
-}
-async function pingResas(key) {
-  const r=await fetch('/api/proxy',{headers:{'x-target':'resas','x-fwd-key':key}});
-  const d=await r.json();
-  return r.ok?{ok:true,msg:`RESAS OK — ${d?.result?.length||0} 都道府県`}:{ok:false,msg:d?.message||'HTTP '+r.status};
-}
+async function pingClaude(key) { return {ok:false,msg:'Claude is server-side — set CLAUDE_API_KEY in Vercel'}; }
 
-/* ── 6. CLAUDE SITE GENERATION ──────────────────────────────────────────────
-   Claude Haiku via /api/proxy — lean 900-token budget               */
-async function generateWithClaude(kw, trend, rakuten) {
-  if (isBudgetCapped()) throw new Error('月額¥3,000上限に達しています。Anthropic Consoleを確認してください。');
-  consumeRate();   // session rate limit check
-  const key = await loadDecrypted('claude');
-  if (!key) throw new Error('Claude APIキーが設定されていません — ⚙ 設定から追加してください。');
-  trackUsage();    // budget deduction (throws if capped)
-
-  const prompt = `You are a Japanese market analyst and web developer.
-Create a complete HTML landing page for: "${kw}"
-Data: Trend score ${trend.score}/100 (${trend.trend}), market demand: ${rakuten?.demandSignal?.level||'Unknown'}, avg price ¥${rakuten?.demandSignal?.avgPrice||0}
-
-Return ONLY a single complete HTML file. Requirements:
-- Dark modern design (#0d1117 bg, #00e5a0 accent)
-- Japanese + English mixed
-- Sections: hero, 3 features, pricing (3 tiers), CTA
-- All CSS inline in <style>
-- Mobile responsive
-- NO markdown, NO explanation`;
-
-  const r = await fetch('/api/proxy',{method:'POST',
-    headers:{'Content-Type':'application/json','x-target':'claude','x-fwd-key':key},
-    body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:900,messages:[{role:'user',content:prompt}]})});
-  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e?.error?.message||`Proxy error HTTP ${r.status}`);}
-  const data=await r.json();
-  return data.content?.[0]?.text||'';
-}
+/* ── 6. CLAUDE SITE GENERATION — server-side via /api/analyze ─────────────────
+   Claude 3.5 Sonnet runs in analyze.js on the server using CLAUDE_API_KEY
+   set in Vercel env vars. No client-side key or proxy call needed here.
+   Budget tracking still applies for the session rate limiter below.       */
 
 function fallbackSite(kw,data){
   return `<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -798,9 +782,11 @@ function fallbackSite(kw,data){
 h1{font-size:2.5rem;color:#00e5a0;margin-bottom:16px}p{color:#6b7280;max-width:480px;margin:0 auto 32px;line-height:1.8}
 .btn{background:#00e5a0;color:#000;padding:14px 32px;border-radius:10px;font-size:16px;font-weight:700;border:none;cursor:pointer}
 .note{margin-top:40px;font-size:11px;color:#374151;font-family:monospace}</style></head>
-<body><h1>${kw}</h1><p>市場スコア: ${data.trend?.score||'—'}/100 · ${data.trend?.trend||'—'}<br>楽天需要: ${data.rakuten?.demandSignal?.level||'—'}</p>
+<body><h1>${kw}</h1>
+<p>市場スコア: ${data.trend?.score||'—'}/100 · ${data.trend?.trend||'—'}<br>楽天需要: ${data.rakuten?.demandSignal?.level||'—'}</p>
 <button class="btn">今すぐ始める →</button>
-<div class="note">⚙ Claude APIキーを設定するとAI生成サイトになります</div></body></html>`;
+<div class="note">CLAUDE_API_KEY を Vercel 環境変数に設定するとAI生成サイトになります</div>
+</body></html>`;
 }
 
 /* ── 7. MODAL / TAB HELPERS ──────────────────────────────────────────────── */
@@ -820,7 +806,7 @@ function switchTab(id, btn) {
   if(btn) btn.classList.add('active');
 }
 function updateGear(){document.getElementById('btnSettings').classList.toggle('has-keys',SERVICES.some(s=>hasStored(s.id)));}
-function updateNokeyBanner(){document.getElementById('nokeyBanner').classList.toggle('hidden',hasStored('claude'));}
+function updateNokeyBanner(){document.getElementById('nokeyBanner').classList.toggle('hidden',hasStored('gemini'));}
 function updateAnalyzeBtn(){document.getElementById('btnAnalyze').disabled=false;} // always allow; Claude disabled by budget internally
 function updateRateBar(){const pct=Math.round(rateUsed/RATE_MAX*100);document.getElementById('rateFill').style.width=pct+'%';document.getElementById('rateCount').textContent=`${rateUsed} / ${RATE_MAX}`;}
 
@@ -882,14 +868,12 @@ async function analyze(){
     const resp=await fetch(`/api/analyze?keyword=${encodeURIComponent(kw)}`);
     const data=await resp.json();
     if(!resp.ok||data.error){showErr(data.error||'サーバーエラーが発生しました。');return;}
-    renderTrend(data.trend,kw); renderDS(data.rakuten,data.youtube);
-    let site='';
-    try{site=await generateWithClaude(kw,data.trend,data.rakuten);}
-    catch(ce){console.warn('Claude skip:',ce.message);site=fallbackSite(kw,data);}
+    renderTrend(data.trend,kw); renderDS(data.rakuten,data.youtube,data.yahoo,data.estat);
+    // Website HTML comes from server (Claude 3.5 Sonnet or Groq fallback)
+    const site = data.result?.websiteHTML || fallbackSite(kw, data);
     setTimeout(()=>{
       document.getElementById('progress').style.display='none';
-      renderResults(data.result,kw,site);
-      document.getElementById('btnAnalyze').disabled=false;
+      renderResults(data.result,kw,site);      document.getElementById('btnAnalyze').disabled=false;
       document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
     },300);
   }catch(e){showErr(e.message||'ネットワークエラーが発生しました。再試行してください。');}
@@ -922,8 +906,10 @@ function renderTrend(data,kw){
   document.getElementById('tagSection').innerHTML=h;
 }
 
-function renderDS(rakuten,youtube){
+function renderDS(rakuten, youtube, yahoo, estat){
   document.getElementById('dataSourcesRow').style.display='grid';
+
+  // ── Rakuten ──
   const rb=document.getElementById('rakutenBadge');
   if(rakuten&&!rakuten.mock){
     rb.textContent='LIVE DATA';rb.className='ds-live-badge live';const d=rakuten.demandSignal;
@@ -938,12 +924,65 @@ function renderDS(rakuten,youtube){
     document.getElementById('rakutenAvgPrice').textContent=d.avgPrice?'¥'+d.avgPrice.toLocaleString():'—';
     document.getElementById('rakutenReviews').textContent=d.totalReviews?d.totalReviews.toLocaleString():'—';
   }
+
+  // ── YouTube — keyword-focused ──
   const yb=document.getElementById('youtubeBadge');
+  const kwLabel=document.getElementById('ytKeywordLabel');
   if(youtube&&!youtube.mock){
     yb.textContent='LIVE DATA';yb.className='ds-live-badge live';
+    if(kwLabel&&youtube.keyword) kwLabel.textContent=`「${youtube.keyword}」`;
     document.getElementById('youtubeResults').textContent=(youtube.totalResults||0).toLocaleString();
-    if(youtube.topChannels?.length) document.getElementById('ytChannels').innerHTML=youtube.topChannels.slice(0,2).map(v=>`<div style="font-size:11px;color:var(--muted);padding:2px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">▶ ${v.title}</div>`).join('');
-  }else{yb.textContent='MOCK';yb.className='ds-live-badge mock';document.getElementById('youtubeResults').textContent=youtube?youtube.totalResults.toLocaleString():'—';}
+    const avgV=youtube.avgViews||0;
+    document.getElementById('youtubeAvgViews').textContent=avgV>=10000?Math.round(avgV/10000)+'万':avgV.toLocaleString();
+    if(youtube.topVideos?.length){
+      document.getElementById('ytChannels').innerHTML=youtube.topVideos.slice(0,2).map(v=>
+        `<div style="font-size:11px;color:var(--muted);padding:2px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer"
+          onclick="window.open('https://youtu.be/${v.videoId}','_blank')" title="${v.title}">
+          ▶ ${v.title.slice(0,36)}${v.title.length>36?'…':''}
+        </div>`
+      ).join('');
+    }
+  }else{
+    yb.textContent='MOCK';yb.className='ds-live-badge mock';
+    document.getElementById('youtubeResults').textContent='—';
+    document.getElementById('youtubeAvgViews').textContent='—';
+  }
+
+  // ── Yahoo! Shopping ──
+  const ybadge=document.getElementById('yahooBadge');
+  if(yahoo&&!yahoo.mock){
+    ybadge.textContent='LIVE DATA';ybadge.className='ds-live-badge live';
+    document.getElementById('yahooHits').textContent=(yahoo.totalHits||0).toLocaleString();
+    document.getElementById('yahooAvgPrice').textContent=yahoo.avgPrice?'¥'+yahoo.avgPrice.toLocaleString():'—';
+    if(yahoo.topSellers?.length){
+      document.getElementById('yahooTopSellers').innerHTML=yahoo.topSellers.slice(0,2).map(s=>
+        `<div style="font-size:11px;color:var(--muted);padding:2px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+          🛍 ${s.name||'—'} <span style="color:var(--accent)">¥${(s.price||0).toLocaleString()}</span>
+        </div>`
+      ).join('');
+    }
+  }else{
+    ybadge.textContent='MOCK';ybadge.className='ds-live-badge mock';
+    document.getElementById('yahooHits').textContent='—';
+    document.getElementById('yahooAvgPrice').textContent='—';
+  }
+
+  // ── e-Stat ──
+  const eb=document.getElementById('estatBadge');
+  if(estat&&!estat.mock){
+    eb.textContent='LIVE DATA';eb.className='ds-live-badge live';
+    document.getElementById('estatCount').textContent=estat.statsCount||0;
+    if(estat.relatedStats?.length){
+      document.getElementById('estatList').innerHTML=estat.relatedStats.slice(0,2).map(s=>
+        `<div style="font-size:11px;color:var(--muted);padding:2px 0;line-height:1.4;border-bottom:1px solid rgba(255,255,255,.04)">
+          📊 ${(s.title||'').slice(0,40)}${(s.title||'').length>40?'…':''}
+        </div>`
+      ).join('');
+    }
+  }else{
+    eb.textContent='MOCK';eb.className='ds-live-badge mock';
+    document.getElementById('estatCount').textContent='—';
+  }
 }
 
 function renderResults(result,kw,site){
