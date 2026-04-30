@@ -53,6 +53,72 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   padding:4px 8px;border-radius:8px;line-height:1;margin:-4px -8px}
 .mh-x:hover{background:var(--s2);color:var(--txt)}
 .mb{padding:14px 18px}
+.m-tabs{display:flex;gap:3px;margin-bottom:14px;background:rgba(0,0,0,.3);
+  border-radius:10px;padding:3px}
+.tab-btn{flex:1;padding:7px 4px;font-size:11px;font-family:var(--fm);font-weight:700;
+  border:none;border-radius:8px;cursor:pointer;background:none;color:var(--sub);
+  text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;transition:all .15s}
+.tab-btn.active{background:var(--s2);color:var(--txt);border:1px solid var(--bdr)}
+.tab-pane{display:none}.tab-pane.active{display:block}
+.master-row{background:rgba(0,229,160,.06);border:1px solid rgba(0,229,160,.2);
+  border-radius:10px;padding:12px 14px;margin-bottom:12px}
+.master-lbl{font-size:10px;font-family:var(--fm);font-weight:700;color:var(--g);
+  text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px}
+.master-note{font-weight:400;color:var(--sub);text-transform:none;letter-spacing:0;
+  font-size:10px;margin-left:5px}
+.master-inner{display:flex;gap:6px}
+.master-inp{flex:1;height:38px;background:rgba(0,0,0,.4);border:1px solid var(--bdr);
+  border-radius:9px;color:var(--txt);font-size:13px;font-family:var(--fm);
+  padding:0 12px;outline:none;min-width:0;-webkit-appearance:none}
+.master-inp:focus{border-color:var(--g);box-shadow:0 0 0 2px rgba(0,229,160,.15)}
+.btn-unlock{height:38px;padding:0 14px;background:var(--g);color:#000;border:none;
+  border-radius:9px;font-size:13px;font-weight:700;font-family:var(--fm);
+  cursor:pointer;flex-shrink:0;white-space:nowrap}
+.unlock-st{font-size:10px;font-family:var(--fm);margin-top:5px;min-height:14px}
+.unlock-st.ok{color:#4ade80}.unlock-st.err{color:#f87171}
+.sec-notice{border:1px solid rgba(245,158,11,.2);background:rgba(245,158,11,.05);
+  border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:11px;
+  font-family:var(--fm);color:rgba(245,158,11,.7);line-height:1.7}
+.sec-notice strong{color:rgba(245,158,11,.95)}
+.key-card{border:1px solid var(--bdr);border-radius:10px;background:rgba(255,255,255,.025);
+  padding:12px 14px;margin-bottom:9px}
+.kc-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:9px;gap:8px}
+.kc-name{font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px}
+.kc-sub{font-size:10px;font-family:var(--fm);color:var(--sub);border:1px solid var(--bdr);
+  border-radius:4px;padding:1px 5px}
+.kc-desc{font-size:11px;color:var(--sub);margin-top:2px}
+.kc-link{font-size:10px;font-family:var(--fm);color:var(--sub);text-decoration:underline;
+  cursor:pointer;background:none;border:none;padding:0;white-space:nowrap;flex-shrink:0}
+.kc-link:hover{color:var(--g)}
+.kc-row{display:flex;align-items:center;gap:5px}
+.kc-inp{flex:1;height:36px;background:rgba(0,0,0,.4);border:1px solid var(--bdr);
+  border-radius:9px;color:var(--txt);font-size:12px;font-family:var(--fm);
+  padding:0 10px;outline:none;min-width:0;-webkit-appearance:none}
+.kc-inp:focus{border-color:rgba(0,229,160,.5)}
+.kc-inp:disabled{opacity:.4}
+.btn-eye{width:30px;height:30px;border:1px solid var(--bdr);border-radius:7px;
+  background:none;cursor:pointer;color:var(--sub);font-size:13px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.btn-eye:hover{color:var(--txt);background:var(--s2)}
+.kc-actions{display:flex;align-items:center;gap:7px;margin-top:7px;flex-wrap:wrap}
+.btn-test{height:26px;padding:0 10px;border:1px solid var(--bdr);border-radius:6px;
+  background:none;cursor:pointer;font-size:10px;font-family:var(--fm);font-weight:700;
+  color:var(--sub);text-transform:uppercase;transition:all .15s}
+.btn-test:hover:not(:disabled){color:var(--txt);border-color:var(--bdr2)}
+.btn-test:disabled{opacity:.3;cursor:not-allowed}
+.btn-save-k{height:26px;padding:0 10px;border:1px solid rgba(0,229,160,.35);
+  border-radius:6px;background:rgba(0,229,160,.1);cursor:pointer;font-size:10px;
+  font-family:var(--fm);font-weight:700;color:var(--g);text-transform:uppercase}
+.btn-save-k:hover{background:rgba(0,229,160,.2)}
+.kst{font-size:10px;font-family:var(--fm);display:flex;align-items:center;gap:4px}
+.kd{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.kd.ok{background:#4ade80}.kd.err{background:#f87171}
+.kd.testing{background:var(--warn);animation:pulse 1s infinite}.kd.saved{background:var(--sub)}
+.kst.s-ok{color:#4ade80}.kst.s-err{color:#f87171}.kst.s-saved{color:var(--sub)}
+.corp-note{border:1px solid rgba(0,229,160,.15);border-radius:10px;padding:10px 12px;
+  font-size:11px;font-family:var(--fm);color:rgba(0,229,160,.5);line-height:1.7;margin-top:4px}
+.corp-note strong{color:rgba(0,229,160,.8)}
+/* budget */
 .spend-meter{background:var(--s2);border:1px solid var(--bdr);border-radius:12px;padding:14px;margin-bottom:10px}
 .spend-amt{font-family:var(--ff);font-size:28px;font-weight:800;letter-spacing:-1px;
   margin-bottom:2px;transition:color .3s}
@@ -71,6 +137,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .bwarn.on{display:block}
 .m-foot{display:flex;justify-content:space-between;align-items:center;
   padding:12px 18px;border-top:1px solid var(--bdr);background:rgba(0,0,0,.2)}
+.btn-clr{font-size:11px;font-family:var(--fm);color:rgba(248,113,113,.55);
+  border:1px solid rgba(248,113,113,.18);background:none;border-radius:6px;
+  padding:4px 10px;cursor:pointer}
+.btn-clr:hover{color:#f87171}
 .mfoot-n{font-size:10px;font-family:var(--fm);color:rgba(255,255,255,.12);text-align:right;line-height:1.6}
 
 /* ── HEADER ─────────────────────────────────────────── */
@@ -81,6 +151,9 @@ header{position:sticky;top:0;z-index:200;display:flex;align-items:center;
 .logo{font-family:var(--ff);font-size:18px;font-weight:800;letter-spacing:-.5px;
   display:flex;align-items:baseline;gap:0;flex-shrink:0}
 .logo em{color:var(--g);font-style:normal}
+.logo small{font-size:9px;font-weight:400;color:var(--dim);font-family:var(--fm);
+  letter-spacing:0;margin-left:6px;display:none}
+@media(min-width:380px){.logo small{display:inline}}
 .hright{display:flex;align-items:center;gap:6px}
 .live-pill{display:flex;align-items:center;gap:4px;font-size:10px;color:#4ade80;
   font-family:var(--fm);background:rgba(74,222,128,.09);border:1px solid rgba(74,222,128,.2);
@@ -94,65 +167,241 @@ header{position:sticky;top:0;z-index:200;display:flex;align-items:center;
 .bpill.ok{color:#4ade80;border-color:rgba(74,222,128,.28);background:rgba(74,222,128,.07)}
 .bpill.warn{color:var(--warn);border-color:rgba(245,158,11,.28);background:rgba(245,158,11,.07)}
 .bpill.danger{color:var(--red);border-color:rgba(239,68,68,.28);background:rgba(239,68,68,.07)}
+.corp-badge{font-size:10px;font-weight:700;background:rgba(59,130,246,.1);color:var(--b);
+  border:1px solid rgba(59,130,246,.22);padding:3px 9px;border-radius:20px;
+  letter-spacing:.3px;display:none}
+@media(min-width:500px){.corp-badge{display:block}}
 .btn-gear{width:34px;height:34px;border-radius:9px;border:1px solid var(--bdr);
   background:var(--s2);color:var(--sub);font-size:16px;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+  display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;
+  -webkit-tap-highlight-color:transparent}
+.btn-gear:hover,.btn-gear:active{border-color:var(--g);color:var(--g);background:rgba(0,229,160,.08)}
+.btn-gear.has-keys{border-color:rgba(0,229,160,.4);color:var(--g)}
 
 /* ── TICKER ─────────────────────────────────────────── */
 .ticker-wrap{overflow:hidden;padding:8px 0;white-space:nowrap;position:relative;z-index:10;
   background:var(--s1);border-bottom:1px solid var(--bdr)}
+.ticker-wrap::before,.ticker-wrap::after{content:'';position:absolute;top:0;bottom:0;
+  width:40px;z-index:2;pointer-events:none}
+.ticker-wrap::before{left:0;background:linear-gradient(90deg,var(--s1),transparent)}
+.ticker-wrap::after{right:0;background:linear-gradient(-90deg,var(--s1),transparent)}
 .ticker-inner{display:inline-block;animation:tick 55s linear infinite;will-change:transform}
+.ticker-inner:hover{animation-play-state:paused}
 .ti{display:inline-flex;align-items:center;gap:5px;padding:0 18px;
   font-family:var(--fm);font-size:10px;color:var(--sub)}
-.ti-badge{font-size:9px;border-radius:3px;padding:1px 5px;font-weight:700;flex-shrink:0}
+.ti-badge{font-size:9px;border-radius:3px;padding:1px 5px;font-weight:700;flex-shrink:0;line-height:1.4}
 .ti-badge.rank{color:var(--g);border:1px solid rgba(0,229,160,.25)}
 .ti-badge.new{background:rgba(0,229,160,.14);color:var(--g);border:1px solid rgba(0,229,160,.5)}
+.ti-badge.live{background:rgba(59,130,246,.12);color:var(--b);border:1px solid rgba(59,130,246,.3)}
 .ti-kw{color:var(--txt);font-weight:700;font-size:11px}
 .ti-score{color:var(--g);font-size:10px}
+.ti-arr{font-size:9px}.ti-arr.up{color:var(--o)}.ti-arr.dn{color:var(--b)}
+.ti-sep{color:var(--bdr);font-size:14px;padding:0 2px}
 @keyframes tick{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+@keyframes spin{to{transform:rotate(360deg)}}
 
 /* ── HERO ────────────────────────────────────────────── */
 .hero{position:relative;z-index:1;text-align:center;padding:48px 16px 40px}
+@media(min-width:600px){.hero{padding:64px 20px 52px}}
+.hero-chip{display:inline-flex;align-items:center;gap:6px;font-size:10px;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--sub);font-weight:700;background:var(--s2);
+  border:1px solid var(--bdr);padding:5px 14px;border-radius:20px;margin-bottom:22px}
 .hero h1{font-family:var(--ff);font-size:clamp(32px,10vw,68px);font-weight:800;
   line-height:1.05;letter-spacing:-2px;margin-bottom:14px}
 .hero h1 .hl{color:var(--g)}
 .hero-sub{font-size:14px;color:var(--sub);max-width:380px;margin:0 auto 32px;line-height:1.9}
+.hero-sub strong{color:var(--txt);font-weight:700}
+
+/* search bar */
 .search-box{max-width:540px;margin:0 auto;display:flex;gap:6px;background:var(--s1);
-  border:1px solid var(--bdr2);border-radius:var(--rad);padding:6px;transition:all .2s}
+  border:1px solid var(--bdr2);border-radius:var(--rad);padding:6px 6px 6px 16px;
+  transition:border-color .2s,box-shadow .2s}
+.search-box:focus-within{border-color:var(--g);box-shadow:0 0 0 3px rgba(0,229,160,.12)}
 .search-box input{flex:1;background:none;border:none;outline:none;color:var(--txt);
-  font-size:15px;padding:0 10px}
+  font-size:15px;font-family:var(--fb);min-width:0;padding:5px 0;
+  -webkit-appearance:none}
+.search-box input::placeholder{color:var(--dim)}
 .btn-go{background:var(--g);color:#000;border:none;border-radius:9px;
-  padding:10px 18px;font-size:14px;font-weight:700;cursor:pointer}
+  padding:10px 18px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;
+  font-family:var(--ff);transition:opacity .15s;flex-shrink:0;
+  -webkit-tap-highlight-color:transparent}
+.btn-go:hover{opacity:.88}.btn-go:active{opacity:.75}
+.btn-go:disabled{opacity:.45;cursor:not-allowed}
+
+/* nokey banner */
+.nokey-banner{max-width:540px;margin:10px auto 0;background:rgba(245,158,11,.07);
+  border:1px solid rgba(245,158,11,.22);border-radius:10px;padding:9px 14px;
+  font-size:12px;font-family:var(--fm);color:rgba(245,158,11,.85);
+  display:flex;align-items:center;gap:8px;cursor:pointer;
+  -webkit-tap-highlight-color:transparent}
+.nokey-banner.hidden{display:none!important}
+
+/* suggestions */
+.sug-row{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;
+  gap:7px;margin-top:14px;min-height:34px}
+.sug-lbl{font-size:11px;color:var(--dim);font-family:var(--fm);flex-shrink:0}
+.sug-btn{background:var(--s2);border:1px solid var(--bdr);color:var(--sub);
+  font-size:12px;padding:5px 13px;border-radius:20px;cursor:pointer;
+  transition:all .2s;font-family:var(--fb);white-space:nowrap;
+  -webkit-tap-highlight-color:transparent}
+.sug-btn:hover,.sug-btn:active{border-color:var(--g);color:var(--g);background:rgba(0,229,160,.07)}
+.sug-btn.live{border-color:rgba(0,229,160,.25);color:rgba(0,229,160,.75)}
+@keyframes popIn{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+.sug-pop{animation:popIn .3s ease}
+
+/* ── PROGRESS ────────────────────────────────────────── */
+#progress{display:none;max-width:480px;margin:28px auto 0;padding:0 16px}
+.step-list{list-style:none}
+.step-item{display:flex;align-items:center;gap:12px;padding:10px 0;font-size:13px;
+  border-bottom:1px solid var(--bdr);transition:all .3s;opacity:.28}
+.step-item.active{opacity:1;color:var(--g)}.step-item.done{opacity:.55}
+.step-icon{font-size:15px;width:22px;text-align:center;flex-shrink:0}
+.spinner{width:16px;height:16px;flex-shrink:0;border:2px solid rgba(0,229,160,.18);
+  border-top-color:var(--g);border-radius:50%;animation:spin .7s linear infinite}
+.err-box{display:none;max-width:460px;margin:24px auto;background:rgba(239,68,68,.08);
+  border:1px solid rgba(239,68,68,.22);border-radius:12px;padding:14px 18px;
+  color:#fca5a5;text-align:center;font-size:13px}
 
 /* ── VALIDATION GATE ─────────────────────────────────── */
 #gate{display:none;max-width:640px;margin:28px auto;padding:0 16px}
 .gate-card{background:var(--s1);border:1px solid var(--bdr2);border-radius:var(--rad2);overflow:hidden}
 .gate-hd{padding:14px 18px;border-bottom:1px solid var(--bdr);background:var(--s2);
-  display:flex;align-items:center;justify-content:space-between}
-.score-row{display:flex;align-items:center;gap:16px;padding:18px}
-.ring-wrap{position:relative;width:78px;height:78px}
-.ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.ring-num{font-family:var(--ff);font-size:22px;font-weight:800}
-.cgate{border:1px dashed rgba(255,255,255,.1);border-radius:12px;padding:16px;text-align:center;margin:18px}
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.gate-title{font-family:var(--ff);font-size:14px;font-weight:800}
+.gate-sub{font-size:10px;color:var(--sub);margin-top:2px;font-family:var(--fm)}
+#gateBadge{font-family:var(--ff);font-size:20px;font-weight:800;color:var(--sub);flex-shrink:0}
+.gate-body{padding:16px 18px}
+.score-row{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+.ring-wrap{flex-shrink:0;position:relative;width:78px;height:78px}
+.ring-wrap canvas{position:absolute;inset:0}
+.ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+.ring-num{font-family:var(--ff);font-size:22px;font-weight:800;line-height:1}
+.ring-max{font-size:10px;color:var(--sub)}
+.score-info h3{font-family:var(--ff);font-size:15px;font-weight:800;margin-bottom:4px}
+.score-info p{font-size:12px;color:var(--sub);line-height:1.55}
+.tbar-wrap{margin-bottom:16px}
+.tbar{position:relative;height:7px;background:rgba(255,255,255,.07);border-radius:4px;overflow:visible;margin-bottom:5px}
+.tbar-fill{height:100%;border-radius:4px;transition:width .9s cubic-bezier(.4,0,.2,1)}
+.tbar-fill.below{background:linear-gradient(90deg,var(--red),var(--o))}
+.tbar-fill.above{background:linear-gradient(90deg,var(--g),#00c9b4)}
+.tbar-line{position:absolute;top:-5px;bottom:-5px;width:2px;background:rgba(255,255,255,.3);border-radius:1px}
+.tbar-line::after{content:'70';position:absolute;top:-17px;left:50%;transform:translateX(-50%);
+  font-size:9px;font-family:var(--fm);color:rgba(255,255,255,.38);white-space:nowrap}
+.tbar-labels{display:flex;justify-content:space-between;font-size:9px;font-family:var(--fm);color:var(--dim)}
+.breakdown{margin-bottom:16px}
+.br-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.br-lbl{font-size:11px;color:var(--sub);width:96px;flex-shrink:0}
+.br-track{flex:1;height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden}
+.br-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--g),#00c9b4);
+  transition:width .9s cubic-bezier(.4,0,.2,1)}
+.br-pts{font-size:10px;font-family:var(--fm);color:var(--g);width:34px;text-align:right;flex-shrink:0}
+.cgate{border:1px dashed rgba(255,255,255,.1);border-radius:12px;padding:16px;text-align:center;transition:all .4s}
+.cgate.locked{background:rgba(0,0,0,.15)}
 .cgate.unlocked{border-color:rgba(0,229,160,.35);background:rgba(0,229,160,.05)}
-.btn-claude{width:100%;padding:13px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;border:none}
-.btn-claude.locked{background:rgba(255,255,255,.05);color:rgba(255,255,255,.2);cursor:not-allowed}
-.btn-claude.unlocked{background:var(--g);color:#000}
+.cgate.capped{border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.04)}
+.cgate-icon{font-size:24px;margin-bottom:7px;display:block}
+.cgate-lbl{font-size:12px;color:var(--sub);margin-bottom:12px;line-height:1.6}
+.cgate-note{font-size:10px;font-family:var(--fm);margin-top:8px;opacity:.5}
+.btn-claude{width:100%;padding:13px 20px;border-radius:10px;font-size:14px;
+  font-weight:700;font-family:var(--ff);cursor:pointer;transition:all .25s;border:none;
+  -webkit-tap-highlight-color:transparent}
+.btn-claude.locked{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+  color:rgba(255,255,255,.2);cursor:not-allowed}
+.btn-claude.unlocked{background:var(--g);color:#000;animation:glow 2.5s ease-in-out infinite}
+.btn-claude.capped{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.28);
+  color:#fca5a5;cursor:not-allowed}
+.btn-claude.running{background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.3);
+  color:var(--g);cursor:not-allowed;animation:none}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(0,229,160,.3)}
+  50%{box-shadow:0 0 20px 4px rgba(0,229,160,.25)}}
 
 /* ── RESULTS ─────────────────────────────────────────── */
 #results{display:none;max-width:1100px;margin:28px auto;padding:0 16px}
-.trend-card{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--rad2);padding:18px;margin-bottom:12px}
+.trend-card{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--rad2);
+  padding:18px;margin-bottom:12px;position:relative;overflow:hidden}
+.trend-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--g),var(--b))}
+.trend-hd{display:flex;align-items:flex-start;justify-content:space-between;
+  flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.trend-kw{font-family:var(--ff);font-size:clamp(17px,5vw,24px);font-weight:800;letter-spacing:-1px}
+.trend-badge{font-size:11px;font-weight:700;background:rgba(0,229,160,.1);
+  border:1px solid rgba(0,229,160,.22);color:var(--g);padding:4px 11px;
+  border-radius:8px;white-space:nowrap;flex-shrink:0}
+.trend-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
 .stat-box{background:var(--s2);border:1px solid var(--bdr);border-radius:9px;padding:10px;text-align:center}
+.stat-v{font-family:var(--ff);font-size:20px;font-weight:800;color:var(--g)}
+.stat-l{font-size:9px;color:var(--sub);text-transform:uppercase;letter-spacing:.7px;margin-top:3px}
+.chart-wrap{height:120px}
+@media(min-width:500px){.chart-wrap{height:140px}}
 .ds-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
-.ds-card{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--rad);padding:13px}
-.lbadge{font-size:9px;font-family:var(--fm);padding:2px 7px;border-radius:9px}
+@media(max-width:460px){.ds-grid{grid-template-columns:1fr}}
+.ds-card{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--rad);
+  padding:13px;position:relative;overflow:hidden}
+.ds-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.ds-card.rak::before{background:linear-gradient(90deg,#e6000d,#f97316)}
+.ds-card.yt::before{background:linear-gradient(90deg,#f00,#f44)}
+.ds-card.yh::before{background:linear-gradient(90deg,#ff0033,#f97316)}
+.ds-card.es::before{background:linear-gradient(90deg,var(--b),var(--g))}
+.ds-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.ds-title{font-family:var(--ff);font-size:12px;font-weight:700}
+.lbadge{font-size:9px;font-family:var(--fm);padding:2px 7px;border-radius:9px;font-weight:700}
 .lbadge.live{background:rgba(74,222,128,.12);color:#4ade80;border:1px solid rgba(74,222,128,.22)}
 .lbadge.mock{background:rgba(255,255,255,.04);color:var(--sub);border:1px solid var(--bdr)}
+.ds-metrics{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.ds-m{text-align:center}
+.ds-mv{font-family:var(--ff);font-size:16px;font-weight:800;color:var(--g)}
+.ds-ml{font-size:9px;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.out-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:680px){.out-grid{grid-template-columns:1fr}}
+.card{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--rad2);overflow:hidden}
+.card-hd{display:flex;align-items:center;gap:8px;padding:12px 16px;
+  border-bottom:1px solid var(--bdr);background:var(--s2)}
+.card-icon{font-size:15px}
+.card-title{font-family:var(--ff);font-weight:700;font-size:13px}
+.card-body{padding:14px;overflow-y:auto;max-height:460px}
+@media(max-width:680px){.card-body{max-height:none}}
+.plan-title{font-family:var(--ff);font-size:16px;font-weight:800;color:var(--g);margin-bottom:3px}
+.plan-tag{font-size:11px;color:var(--sub);margin-bottom:12px;font-style:italic}
+.plan-sec{margin-bottom:11px}
+.plan-sec-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;
+  color:var(--b);margin-bottom:4px}
+.plan-sec p,.plan-sec li{font-size:12px;line-height:1.7;color:rgba(238,240,248,.8)}
+.plan-sec ul{padding-left:14px}
+.seo-tags{display:flex;flex-wrap:wrap;gap:4px}
+.seo-tag{font-size:10px;padding:2px 8px;border-radius:5px;background:rgba(0,229,160,.08);
+  color:var(--g);border:1px solid rgba(0,229,160,.15)}
+.prev-bar{display:flex;align-items:center;gap:6px;padding:7px 12px;
+  background:#141820;border-bottom:1px solid var(--bdr)}
+.dot{width:8px;height:8px;border-radius:50%}
+.dot.r{background:#ff5f56}.dot.y{background:#ffbd2e}.dot.g{background:#27c93f}
+.prev-url{flex:1;background:rgba(255,255,255,.05);border-radius:5px;padding:3px 9px;
+  font-size:10px;color:var(--sub);font-family:var(--fm);overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.gen-badge{font-size:9px;font-family:var(--fm);padding:2px 7px;border-radius:9px;flex-shrink:0;font-weight:700}
+.gen-badge.claude{background:rgba(0,229,160,.12);color:var(--g);border:1px solid rgba(0,229,160,.22)}
+.gen-badge.groq{background:rgba(255,255,255,.05);color:var(--sub);border:1px solid var(--bdr)}
+.prev-frame{height:360px;overflow:hidden}
+@media(max-width:460px){.prev-frame{height:240px}}
+#siteFrame{width:100%;height:100%;border:none;background:#fff}
+.btn-dl{display:block;width:100%;background:none;border:none;
+  border-top:1px solid var(--bdr);color:var(--sub);text-align:center;padding:11px;
+  font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;font-family:var(--fb);
+  -webkit-tap-highlight-color:transparent}
+.btn-dl:hover,.btn-dl:active{background:rgba(0,229,160,.07);color:var(--g)}
 
-/* ── PROGRESS ── */
-#progress{display:none;max-width:480px;margin:28px auto;text-align:center}
-.spinner{width:24px;height:24px;border:3px solid rgba(0,229,160,.18);border-top-color:var(--g);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 10px}
-@keyframes spin{to{transform:rotate(360deg)}}
+/* ── FOOTER ──────────────────────────────────────────── */
+footer{text-align:center;padding:24px 16px 32px;color:var(--sub);font-size:11px;
+  border-top:1px solid var(--bdr);margin-top:40px;position:relative;z-index:1}
+.foot-row{display:flex;flex-wrap:wrap;justify-content:center;gap:5px 14px;margin-bottom:10px}
+.foot-item{display:flex;align-items:center;gap:4px;font-family:var(--fm);font-size:10px;color:var(--dim)}
+.foot-dot{width:4px;height:4px;border-radius:50%;flex-shrink:0}
+.foot-bottom{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;
+  gap:7px;font-family:var(--fm);font-size:10px;color:var(--dim)}
+.sudu{display:inline-flex;align-items:center;gap:3px;font-family:var(--fm);font-size:10px;
+  color:rgba(0,229,160,.35);border:1px solid rgba(0,229,160,.15);border-radius:4px;
+  padding:2px 7px;text-decoration:none;transition:all .2s;letter-spacing:.06em}
+.sudu:hover{color:rgba(0,229,160,.7);border-color:rgba(0,229,160,.3)}
+.sudu::before{content:'◈';font-size:8px;margin-right:1px}
 </style>
 </head>
 <body>
@@ -162,74 +411,121 @@ header{position:sticky;top:0;z-index:200;display:flex;align-items:center;
 <div class="modal">
   <div class="mh">
     <div><div class="mh-title">💴 月次予算トラッカー</div>
-    <div class="mh-sub">Corporate Cap · ¥3,000 / 月</div></div>
+    <div class="mh-sub">Claude 会社負担 · ¥3,000 / 月上限</div></div>
     <button class="mh-x" onclick="closeSettings()">×</button>
   </div>
   <div class="mb">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px">
+      <div style="font-size:11px;font-family:var(--fm);font-weight:700;color:var(--txt);text-transform:uppercase;letter-spacing:.07em">Monthly Spend</div>
+      <button style="font-size:10px;font-family:var(--fm);color:var(--sub);background:none;border:1px solid var(--bdr);border-radius:5px;padding:3px 9px;cursor:pointer" onclick="resetBudget()">↺ Reset</button>
+    </div>
     <div class="spend-meter">
       <div class="spend-amt ok" id="spendAmount">¥0</div>
-      <div class="spend-lbl" id="spendLabel">of ¥3,000 cap</div>
+      <div class="spend-lbl" id="spendLabel">of ¥3,000 cap · <span id="spendPct">0%</span> used</div>
       <div class="spend-bar"><div class="spend-fill ok" id="spendFill" style="width:0%"></div></div>
     </div>
     <div class="spend-stats">
       <div class="ss"><div class="ss-v" id="statSearches">0</div><div class="ss-l">Calls</div></div>
+      <div class="ss"><div class="ss-v">¥45</div><div class="ss-l">Per Call</div></div>
       <div class="ss"><div class="ss-v" id="statRemaining">¥3,000</div><div class="ss-l">Left</div></div>
     </div>
-    <div class="bwarn" id="budgetWarnBox">⚠ 予算上限に達しました。Claude生成を制限しています。</div>
+    <div class="bwarn" id="budgetWarnBox">⚠ 月額¥3,000上限に達しました。Claude生成は停止中です。</div>
+    <div style="margin-top:12px;border:1px solid var(--bdr);border-radius:10px;padding:10px 12px;font-size:11px;font-family:var(--fm);color:var(--sub);line-height:1.7">
+      🔑 全APIキーは <strong style="color:var(--txt)">Vercel 環境変数</strong> で管理<br>
+      <span style="color:var(--dim)">ANTHROPIC_CORP_KEY · GROQ_API_KEY · SERPAPI_KEY<br>RAKUTEN_APP_ID · YOUTUBE_API_KEY</span>
+    </div>
   </div>
   <div class="m-foot">
-    <div style="font-size:11px;font-family:var(--fm);color:var(--dim)">Claude Haiku · Company Tier</div>
-    <div class="mfoot-n">Vercel Environment Keys</div>
+    <div style="font-size:11px;font-family:var(--fm);color:var(--dim)">Claude Haiku · 会社負担</div>
+    <div class="mfoot-n">Vercel env vars only<br>no BYOK needed</div>
   </div>
 </div>
 </div>
 
 <!-- HEADER -->
 <header>
-  <div class="logo">SSI<em>-</em>AI<small style="font-size:9px;color:var(--dim);margin-left:5px">Corporate</small></div>
+  <div class="logo">SSI<em>-</em>AI<small>Corporate</small></div>
   <div class="hright">
     <div class="live-pill"><span class="live-dot"></span>LIVE</div>
-    <div class="bpill ok" id="headerBudgetPill" onclick="openSettings()" title="月次予算">¥0 / ¥3k</div>
-    <button class="btn-gear" onclick="openSettings()">💴</button>
+    <div class="bpill ok" id="headerBudgetPill" onclick="openSettings('budget')" title="月次予算">¥0 / ¥3k</div>
+    <span class="corp-badge">社内版</span>
+    <button class="btn-gear" id="btnGear" onclick="openSettings()" title="月次予算">💴</button>
   </div>
 </header>
 
-<div class="ticker-wrap"><div class="ticker-inner" id="tickerInner"></div></div>
+<!-- TICKER -->
+<div class="ticker-wrap"><div class="ticker-inner" id="tickerInner">
+  <span class="ti"><span class="ti-badge rank">…</span><span class="ti-kw">読込中</span></span>
+</div></div>
 
+<!-- HERO -->
 <section class="hero">
+  <div class="hero-chip">Trends × Rakuten × YouTube × Claude AI</div>
   <h1>アイデアを、<br><span class="hl">ビジネスへ。</span></h1>
-  <p class="hero-sub">スコア <strong>70点以上</strong>で Claude 生成が解除されます。</p>
+  <p class="hero-sub">
+    キーワードを入れるだけ。スコア <strong>70点以上</strong>で<br>
+    Claude によるWebサイト生成が解除されます。
+  </p>
   <div class="search-box">
-    <input type="text" id="keyword" placeholder="例：ミールキット、AIツール..." autocomplete="off">
+    <input type="text" id="keyword" placeholder="例：パーソナルジム、副業、ミールキット…" autocomplete="off">
     <button class="btn-go" id="btnAnalyze" onclick="analyze()">分析 →</button>
+  </div>
+  <div class="sug-row" id="sugRow">
+    <span class="sug-lbl">今注目：</span>
+    <button class="sug-btn" onclick="fill(this.textContent)">ミールキット</button>
+    <button class="sug-btn" onclick="fill(this.textContent)">AIツール</button>
+    <button class="sug-btn" onclick="fill(this.textContent)">副業</button>
+    <button class="sug-btn" onclick="fill(this.textContent)">ペットフード</button>
   </div>
 </section>
 
 <!-- PROGRESS -->
 <div id="progress">
-  <div class="spinner"></div>
-  <div id="stepText" style="font-size:13px;color:var(--sub)">市場データを分析中...</div>
+  <ul class="step-list">
+    <li class="step-item" id="s1"><span class="step-icon">📡</span>Phase 1: Google Trends 取得中…</li>
+    <li class="step-item" id="s2"><span class="step-icon">🛒</span>Phase 1: 楽天 / YouTube / Yahoo! 照合中…</li>
+    <li class="step-item" id="s3"><span class="step-icon">🧮</span>Phase 2: バリデーションスコア算出中…</li>
+    <li class="step-item" id="s4"><span class="step-icon">🧠</span>Phase 1: Groq でビジネスプラン生成中 (¥0)…</li>
+  </ul>
 </div>
+<div class="err-box" id="errorBox"></div>
 
 <!-- VALIDATION GATE -->
 <div id="gate">
   <div class="gate-card">
     <div class="gate-hd">
-      <div style="font-weight:800;font-size:14px">🎯 Phase 2 — バリデーションゲート</div>
-      <div id="gateBadge" style="font-weight:800">0/100</div>
+      <div><div class="gate-title">🎯 Phase 2 — バリデーションゲート</div>
+      <div class="gate-sub">Free Layer 完了 · Claude 解除条件: スコア ≥ 70</div></div>
+      <div id="gateBadge">—</div>
     </div>
-    <div class="score-row">
-      <div class="ring-wrap"><canvas id="scoreRing" width="78" height="78"></canvas>
-        <div class="ring-center"><div class="ring-num" id="scoreNum">—</div></div>
+    <div class="gate-body">
+      <div class="score-row">
+        <div class="ring-wrap">
+          <canvas id="scoreRing" width="78" height="78"></canvas>
+          <div class="ring-center">
+            <div class="ring-num" id="scoreNum" style="color:var(--sub)">—</div>
+            <div class="ring-max">/100</div>
+          </div>
+        </div>
+        <div class="score-info">
+          <h3 id="scoreVerdict">集計中…</h3>
+          <p id="scoreDetail"></p>
+        </div>
       </div>
-      <div>
-        <h3 id="scoreVerdict" style="font-size:15px;margin-bottom:4px">集計中...</h3>
-        <p id="scoreDetail" style="font-size:12px;color:var(--sub)"></p>
+      <div class="tbar-wrap">
+        <div class="tbar">
+          <div class="tbar-fill below" id="tbarFill" style="width:0%"></div>
+          <div class="tbar-line" style="left:70%"></div>
+        </div>
+        <div class="tbar-labels"><span>0</span><span>50</span><span>100</span></div>
       </div>
-    </div>
-    <div class="cgate" id="cgate">
-      <p id="cgateLbl" style="font-size:12px;margin-bottom:12px">スコアに応じて Claude が解除されます。</p>
-      <button class="btn-claude locked" id="btnClaude" disabled onclick="runClaude()">Claude でWebサイト生成</button>
+      <div class="breakdown" id="breakdownRows"></div>
+      <div class="cgate locked" id="cgate">
+        <span class="cgate-icon" id="cgateIcon">🔒</span>
+        <p class="cgate-lbl" id="cgateLbl">スコアに応じて Claude が解除されます。</p>
+        <button class="btn-claude locked" id="btnClaude" disabled onclick="runClaude()">Claude でWebサイト生成</button>
+        <div class="cgate-note" id="cgateNote">スコア70以上で解除</div>
+      </div>
     </div>
   </div>
 </div>
@@ -237,93 +533,377 @@ header{position:sticky;top:0;z-index:200;display:flex;align-items:center;
 <!-- RESULTS -->
 <div id="results">
   <div class="trend-card">
-    <div id="resKeyword" style="font-size:24px;font-weight:800"></div>
-    <div style="height:140px;margin-top:15px"><canvas id="trendChart"></canvas></div>
+    <div class="trend-hd">
+      <div>
+        <div class="trend-kw" id="resKeyword"></div>
+        <div style="color:var(--sub);font-size:11px;margin-top:3px">Google トレンド（日本 · 過去12ヶ月）</div>
+      </div>
+      <div class="trend-badge" id="resTrend"></div>
+    </div>
+    <div class="trend-stats">
+      <div class="stat-box"><div class="stat-v" id="statScore">—</div><div class="stat-l">現在</div></div>
+      <div class="stat-box"><div class="stat-v" id="statAvg">—</div><div class="stat-l">年間平均</div></div>
+      <div class="stat-box"><div class="stat-v" id="statRecent">—</div><div class="stat-l">直近4週</div></div>
+    </div>
+    <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
   </div>
-  <div class="ds-grid">
-    <div class="ds-card"><div>🛒 楽天 <span class="lbadge mock" id="rBadge">MOCK</span></div><div id="rDemand" style="font-size:20px;font-weight:800;color:var(--g);margin-top:8px">—</div></div>
-    <div class="ds-card"><div>▶ YouTube <span class="lbadge mock" id="ytBadge">MOCK</span></div><div id="ytViews" style="font-size:20px;font-weight:800;color:var(--g);margin-top:8px">—</div></div>
+
+  <div class="ds-grid" id="dsGrid" style="display:none">
+    <div class="ds-card rak">
+      <div class="ds-hd"><div class="ds-title">🛒 楽天市場</div><span class="lbadge" id="rBadge">—</span></div>
+      <div class="ds-metrics">
+        <div class="ds-m"><div class="ds-mv" id="rCount">—</div><div class="ds-ml">商品数</div></div>
+        <div class="ds-m"><div class="ds-mv" id="rDemand">—</div><div class="ds-ml">需要</div></div>
+        <div class="ds-m"><div class="ds-mv" id="rPrice">—</div><div class="ds-ml">平均価格</div></div>
+        <div class="ds-m"><div class="ds-mv" id="rReviews">—</div><div class="ds-ml">レビュー</div></div>
+      </div>
+    </div>
+    <div class="ds-card yt">
+      <div class="ds-hd"><div class="ds-title">▶ YouTube JP</div><span class="lbadge" id="ytBadge">—</span></div>
+      <div class="ds-metrics">
+        <div class="ds-m"><div class="ds-mv" id="ytResults">—</div><div class="ds-ml">動画数</div></div>
+        <div class="ds-m"><div class="ds-mv" id="ytViews">—</div><div class="ds-ml">平均再生</div></div>
+      </div>
+    </div>
+    <div class="ds-card yh">
+      <div class="ds-hd"><div class="ds-title">🛍 Yahoo! Shopping</div><span class="lbadge" id="yhBadge">—</span></div>
+      <div class="ds-metrics">
+        <div class="ds-m"><div class="ds-mv" id="yhHits">—</div><div class="ds-ml">出品数</div></div>
+        <div class="ds-m"><div class="ds-mv" id="yhPrice">—</div><div class="ds-ml">平均価格</div></div>
+      </div>
+    </div>
+    <div class="ds-card es">
+      <div class="ds-hd"><div class="ds-title">📊 e-Stat 統計</div><span class="lbadge" id="esBadge">—</span></div>
+      <div class="ds-metrics">
+        <div class="ds-m"><div class="ds-mv" id="esCount">—</div><div class="ds-ml">関連系列</div></div>
+        <div class="ds-m"><div class="ds-mv" id="esUnit">—</div><div class="ds-ml">単位</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="out-grid">
+    <div class="card">
+      <div class="card-hd"><span class="card-icon">📋</span>
+        <span class="card-title">AIビジネスプラン</span>
+        <span style="font-size:9px;font-family:var(--fm);color:var(--dim);margin-left:4px">Groq (¥0)</span>
+      </div>
+      <div class="card-body" id="planBody"><div style="color:var(--sub);font-size:12px">生成中…</div></div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><span class="card-icon">🌐</span><span class="card-title">Webサイト プレビュー</span></div>
+      <div class="prev-bar">
+        <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+        <div class="prev-url" id="siteUrl">—</div>
+        <div class="gen-badge groq" id="genBadge">Groq</div>
+      </div>
+      <div class="prev-frame"><iframe id="siteFrame" sandbox="allow-scripts allow-same-origin"></iframe></div>
+      <button class="btn-dl" id="btnDL" onclick="downloadSite()" style="display:none">⬇ HTMLをダウンロード</button>
+    </div>
   </div>
 </div>
 
+<!-- FOOTER -->
+<footer>
+  <div class="foot-row">
+    <span class="foot-item"><span class="foot-dot" style="background:#4ade80"></span>Google Trends</span>
+    <span class="foot-item"><span class="foot-dot" style="background:#e6000d"></span>楽天市場</span>
+    <span class="foot-item"><span class="foot-dot" style="background:#f00"></span>YouTube</span>
+    <span class="foot-item"><span class="foot-dot" style="background:#ff0033"></span>Yahoo!</span>
+    <span class="foot-item"><span class="foot-dot" style="background:#00e5a0"></span>Claude Haiku</span>
+  </div>
+  <div class="foot-bottom">
+    <span>SSI-AI Corporate</span><span style="opacity:.3">|</span>
+    <span>© 2026</span><span style="opacity:.3">|</span>
+    <a class="sudu" href="#" title="Designed & built by sudu">sudu</a>
+  </div>
+</footer>
+
 <script>
-const BCAP = 3000, BK = 'ssi_budget_v1';
-let mainChart = null, ringChart = null, currentScore = 0;
+'use strict';
+/* ── AES VAULT ── */
+const NS='ssi_byok_';let _vk=null;
+const _te=new TextEncoder(),_td=new TextDecoder();
+const h2a=h=>new Uint8Array(h.match(/.{2}/g).map(b=>parseInt(b,16)));
+const a2h=a=>Array.from(a).map(b=>b.toString(16).padStart(2,'0')).join('');
+async function deriveKey(p,s){const k=await crypto.subtle.importKey('raw',_te.encode(p),'PBKDF2',false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt:h2a(s),iterations:200000,hash:'SHA-256'},k,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);}
+async function vEnc(p,k){const iv=crypto.getRandomValues(new Uint8Array(12));const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},k,_te.encode(p));return a2h(iv)+':'+a2h(new Uint8Array(ct));}
+async function vDec(s,k){const[ih,ch]=s.split(':');return _td.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:h2a(ih)},k,h2a(ch)));}
+function getSalt(){let s=localStorage.getItem(NS+'salt');if(!s){s=a2h(crypto.getRandomValues(new Uint8Array(16)));localStorage.setItem(NS+'salt',s);}return s;}
+async function unlockVault(){
+  const p=document.getElementById('masterPwd').value,el=document.getElementById('unlockStatus');
+  if(!p){setSt(el,'err','パスワードを入力');return;}
+  try{_vk=await deriveKey(p,getSalt());const t=localStorage.getItem(NS+'gemini');if(t)await vDec(t,_vk);setSt(el,'ok','✓ Unlocked');await loadFromVault();updateGear();}
+  catch{_vk=null;setSt(el,'err','Wrong password');}
+}
+async function saveEnc(svc,val){if(!_vk){alert('先にUnlockしてください');return false;}if(!val.trim()){localStorage.removeItem(NS+svc);return true;}localStorage.setItem(NS+svc,await vEnc(val.trim(),_vk));return true;}
+async function loadDec(svc){if(!_vk)return'';const r=localStorage.getItem(NS+svc);if(!r)return'';try{return await vDec(r,_vk);}catch{return'';}}
+const hasKey=s=>!!localStorage.getItem(NS+s);
 
-function getBudget() {
-  const r = JSON.parse(localStorage.getItem(BK) || '{"spend":0,"searches":0}');
-  return r;
+/* ── KEY SERVICES ── */
+const SVCS=[{id:'gemini',name:'Gemini 2.0 Flash',sub:'Google AI Studio',desc:'補助AI分析 · 無料',docs:'https://aistudio.google.com/app/apikey',ph:'AIza••••••••••••••••••••••••••••'}];
+const fst={};
+function renderKeys(){
+  const c=document.getElementById('keyFields');c.innerHTML='';
+  SVCS.forEach(s=>{
+    if(!fst[s.id])fst[s.id]={value:''};
+    const d=document.createElement('div');d.className='key-card';
+    d.innerHTML=`<div class="kc-head"><div><div class="kc-name">${s.name}<span class="kc-sub">${s.sub}</span></div><div class="kc-desc">${s.desc}</div></div><button class="kc-link" onclick="window.open('${s.docs}','_blank')">Get key →</button></div><div class="kc-row"><input class="kc-inp" id="ki-${s.id}" type="password" placeholder="${s.ph}" autocomplete="off" oninput="onKI('${s.id}',this.value)"><button class="btn-eye" onclick="toggleEye('${s.id}')">◎</button></div><div class="kc-actions"><button class="btn-test" id="kt-${s.id}" onclick="testK('${s.id}')">▷ Test</button><button class="btn-save-k" id="ks-${s.id}" onclick="saveK('${s.id}')" style="display:none">⊕ Save</button><div class="kst" id="kst-${s.id}"></div></div>`;
+    c.appendChild(d);
+    if(hasKey(s.id)&&!_vk)setKSt(s.id,'saved','🔒 暗号化済み');
+  });
+  const n=document.createElement('div');n.className='corp-note';
+  n.innerHTML='🔒 <strong>Claude Haiku</strong> は <code>ANTHROPIC_CORP_KEY</code>（Vercel環境変数）で実行。';
+  c.appendChild(n);
+}
+function onKI(id,v){fst[id].value=v;setKSt(id,'','');document.getElementById('ks-'+id).style.display=v.trim()?'':'none';}
+function toggleEye(id){const i=document.getElementById('ki-'+id),b=i.nextElementSibling;i.type=i.type==='password'?'text':'password';b.textContent=i.type==='password'?'◎':'◉';}
+async function loadFromVault(){for(const s of SVCS){const v=await loadDec(s.id);const i=document.getElementById('ki-'+s.id);if(i&&v){i.value=v;fst[s.id].value=v;setKSt(s.id,'saved','✓ 読み込み済み');}}}
+async function saveK(id){const v=fst[id]?.value||'';if(await saveEnc(id,v)){document.getElementById('ks-'+id).style.display='none';setKSt(id,'saved','✓ 保存');updateGear();updateBanner();}}
+async function clearAllKeysUI(){if(!confirm('全キーを削除？'))return;SVCS.forEach(s=>localStorage.removeItem(NS+s.id));localStorage.removeItem(NS+'salt');_vk=null;document.getElementById('masterPwd').value='';renderKeys();updateGear();updateBanner();}
+function setKSt(id,type,msg){const el=document.getElementById('kst-'+id);if(!el)return;if(!msg){el.innerHTML='';return;}const dc={ok:'ok',err:'err',testing:'testing',saved:'saved'}[type]||'';el.className='kst'+(type?' s-'+type:'');el.innerHTML=dc?`<span class="kd ${dc}"></span>${msg}`:msg;}
+function setSt(el,type,msg){el.className='unlock-st '+type;el.textContent=msg;}
+async function testK(id){
+  const v=(document.getElementById('ki-'+id)?.value||'').trim();
+  if(!v){setKSt(id,'err','キーを入力');return;}
+  document.getElementById('kt-'+id).disabled=true;setKSt(id,'testing','Testing…');
+  let r;try{r=await pingGemini(v);}catch(e){r={ok:false,msg:e.message};}
+  setKSt(id,r.ok?'ok':'err',(r.ok?'✓ ':' ✗ ')+r.msg);document.getElementById('kt-'+id).disabled=false;
+}
+async function pingGemini(key){
+  const u=new URL('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent');
+  u.searchParams.set('key',key);
+  const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:'Hi'}]}]})});
+  const d=await r.json();return r.ok?{ok:true,msg:'OK'}:{ok:false,msg:d?.error?.message||'HTTP '+r.status};
 }
 
-function updateBudgetUI() {
-  const b = getBudget(), pct = Math.min(100, Math.round(b.spend/BCAP*100));
-  document.getElementById('spendAmount').textContent = '¥' + b.spend;
-  document.getElementById('spendFill').style.width = pct + '%';
-  document.getElementById('headerBudgetPill').textContent = '¥' + b.spend + ' / ¥3k';
-  document.getElementById('statSearches').textContent = b.searches;
+/* ── MODAL ── */
+function openSettings(tab='keys'){
+  document.getElementById('settingsModal').classList.add('open');
+  renderKeys();refreshBudgetUI();
+  if(tab==='budget'){
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+    document.getElementById('tab-budget').classList.add('active');
+    document.querySelector('.tab-btn:last-child').classList.add('active');
+  }
+}
+function closeSettings(){document.getElementById('settingsModal').classList.remove('open');}
+function switchTab(id,btn){document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.getElementById('tab-'+id).classList.add('active');if(btn)btn.classList.add('active');}
+function updateGear(){const g=document.getElementById('btnGear');if(g)g.classList.toggle('has-keys',SVCS.some(s=>hasKey(s.id)));}
+function updateBanner(){const b=document.getElementById('nokeyBanner');if(b)b.classList.toggle('hidden',hasKey('gemini'));}
+document.getElementById('settingsModal').addEventListener('click',e=>{if(e.target===document.getElementById('settingsModal'))closeSettings();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSettings();});
+
+/* ── BUDGET ── */
+const BCAP=3000,BK=NS+'budget_v1';
+function getBudget(){try{const r=JSON.parse(localStorage.getItem(BK)||'{}');const m=new Date().toISOString().slice(0,7);if(r.month!==m)return{month:m,spend:0,searches:0};return r;}catch{return{month:new Date().toISOString().slice(0,7),spend:0,searches:0};}}
+function saveBudget(b){localStorage.setItem(BK,JSON.stringify(b));}
+function resetBudget(){if(!confirm('リセット？'))return;const b=getBudget();b.spend=0;b.searches=0;saveBudget(b);refreshBudgetUI();}
+function refreshBudgetUI(){
+  const b=getBudget(),pct=Math.min(100,Math.round(b.spend/BCAP*100)),st=pct>=100?'danger':pct>=70?'warn':'ok';
+  const sa=document.getElementById('spendAmount');if(sa){sa.textContent='¥'+b.spend;sa.className='spend-amt '+st;}
+  const sl=document.getElementById('spendLabel');if(sl)sl.innerHTML='of ¥3,000 cap · <span>'+pct+'%</span> used';
+  const sf=document.getElementById('spendFill');if(sf){sf.style.width=pct+'%';sf.className='spend-fill '+st;}
+  const ss=document.getElementById('statSearches');if(ss)ss.textContent=b.searches||0;
+  const sr=document.getElementById('statRemaining');if(sr)sr.textContent='¥'+Math.max(0,BCAP-b.spend);
+  const wb=document.getElementById('budgetWarnBox');if(wb)wb.classList.toggle('on',pct>=100);
+  refreshBPill(b.spend);
+}
+function refreshBPill(spend){
+  const pct=Math.min(100,Math.round(spend/BCAP*100)),st=pct>=100?'danger':pct>=70?'warn':'ok';
+  const p=document.getElementById('headerBudgetPill');if(p){p.textContent='¥'+Math.round(spend)+' / ¥3k';p.className='bpill '+st;}
 }
 
-function openSettings() { document.getElementById('settingsModal').classList.add('open'); updateBudgetUI(); }
-function closeSettings() { document.getElementById('settingsModal').classList.remove('open'); }
-
-function renderTicker() {
-  const seeds = [{kw:'AIツール',s:92},{kw:'副業',s:88},{kw:'ミールキット',s:75}];
-  const html = seeds.map(i => `<span class="ti"><span class="ti-badge rank">#1</span><span class="ti-kw">${i.kw}</span><span class="ti-score">${i.s}</span></span>`).join('');
-  document.getElementById('tickerInner').innerHTML = html + html;
+/* ── TICKER ── */
+const SEED=[
+  {kw:'AIツール',score:92,up:true},{kw:'副業',score:88,up:true},
+  {kw:'ミールキット',score:78,up:true},{kw:'ペットフード',score:71,up:false},
+  {kw:'プログラミングスクール',score:68,up:true},{kw:'ミニマリスト家具',score:64,up:true},
+  {kw:'フリーランス',score:61,up:true},{kw:'サブスク',score:58,up:false},
+];
+let liveItems=[...SEED];
+const gSess=()=>{try{return JSON.parse(sessionStorage.getItem('ssi_r')||'[]');}catch{return[];}};
+const sSess=a=>sessionStorage.setItem('ssi_r',JSON.stringify(a));
+function tickerAdd(kw){const r=gSess().filter(x=>x.kw!==kw);r.unshift({kw,score:null,isNew:true,src:'user'});sSess(r.slice(0,8));rebuildTicker();}
+function tickerScore(kw,score){const r=gSess();const i=r.findIndex(x=>x.kw===kw);if(i!==-1){r[i]={...r[i],score,isNew:false};sSess(r);rebuildTicker();}}
+function mkTI(item,rank){
+  const badge=item.src==='user'&&item.isNew?'<span class="ti-badge new">NEW</span>':item.src==='live'?'<span class="ti-badge live">JP</span>':'<span class="ti-badge rank">#'+rank+'</span>';
+  const sc=item.score!=null?'<span class="ti-score">'+item.score+'</span>':item.isNew?'<span style="font-size:9px;color:var(--g);opacity:.4">…</span>':'';
+  const arr=item.up==null?'':item.up?'<span class="ti-arr up">▲</span>':'<span class="ti-arr dn">▼</span>';
+  return'<span class="ti">'+badge+'<span class="ti-kw">'+item.kw+'</span>'+sc+arr+'</span><span class="ti-sep">·</span>';
 }
-
-async function analyze() {
-  const kw = document.getElementById('keyword').value;
-  if(!kw) return;
-  document.getElementById('progress').style.display = 'block';
-  document.getElementById('results').style.display = 'none';
-  document.getElementById('gate').style.display = 'none';
-
-  // Simulated API call[cite: 1]
-  setTimeout(() => {
-    document.getElementById('progress').style.display = 'none';
-    document.getElementById('results').style.display = 'block';
-    document.getElementById('gate').style.display = 'block';
-    document.getElementById('resKeyword').textContent = kw;
-    
-    // Logic: If keyword contains "AI", give high score to unlock
-    currentScore = kw.includes('AI') ? 85 : 55;
-    renderGate(currentScore);
-    renderTrend();
-  }, 2000);
+function rebuildTicker(){
+  const user=gSess(),seen=new Set(),all=[];
+  for(const item of[...user,...liveItems]){if(!seen.has(item.kw)){seen.add(item.kw);all.push(item);}}
+  const html=all.map((x,i)=>mkTI(x,i+1)).join('');
+  const el=document.getElementById('tickerInner');
+  if(el)el.innerHTML=html+html;
 }
-
-function renderGate(score) {
-  document.getElementById('scoreNum').textContent = score;
-  document.getElementById('gateBadge').textContent = score + '/100';
-  const unlocked = score >= 70;
-  
-  const btn = document.getElementById('btnClaude');
-  btn.className = unlocked ? 'btn-claude unlocked' : 'btn-claude locked';
-  btn.disabled = !unlocked;
-  btn.textContent = unlocked ? 'Claude でWebサイト生成' : 'スコア不足 (70以上で解除)';
-  
-  document.getElementById('scoreVerdict').textContent = unlocked ? '✅ 解除条件達成' : '🔒 スコア不足';
-  document.getElementById('scoreDetail').textContent = unlocked ? 'Claude Haiku による生成が可能です。' : '市場需要が基準に達していません。';
-
-  if(ringChart) ringChart.destroy();
-  ringChart = new Chart(document.getElementById('scoreRing'), {
-    type:'doughnut',
-    data:{datasets:[{data:[score, 100-score], backgroundColor:[unlocked?'#00e5a0':'#ef4444', '#1e2535'], borderWidth:0}]},
-    options:{cutout:'80%', plugins:{legend:{display:false}}}
+function setSuggestions(items){
+  const el=document.getElementById('sugRow');if(!el)return;
+  el.innerHTML='<span class="sug-lbl">今注目：</span>';
+  items.slice(0,5).forEach((k,i)=>{
+    const btn=document.createElement('button');
+    btn.className='sug-btn live';
+    btn.style.animation='popIn .3s ease '+i*60+'ms both';
+    btn.textContent=k.keyword||k.kw;
+    btn.onclick=()=>fill(btn.textContent);
+    el.appendChild(btn);
   });
 }
+async function loadLiveData(){
+  rebuildTicker(); // show seed immediately
+  try{
+    const r=await fetch('/api/trending');
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const data=await r.json();
+    const items=data.trending||[];
+    if(!items.length)throw new Error('empty');
+    liveItems=items.map((k,i)=>({kw:k.keyword,score:k.score,up:i<items.length/2,src:data.source==='static'?'seed':'live'}));
+    rebuildTicker();
+    setSuggestions(items);
+  }catch(e){console.warn('trending:',e.message);}
+}
 
-function renderTrend() {
-  if(mainChart) mainChart.destroy();
-  mainChart = new Chart(document.getElementById('trendChart'), {
+/* ── CORE ── */
+let mainChart=null,ringChart=null,genHTML='',currentData=null;
+
+function setStep(n){
+  for(let i=1;i<=4;i++){
+    const el=document.getElementById('s'+i);if(!el)continue;
+    if(i<n){el.className='step-item done';el.querySelector('.spinner')?.remove();el.querySelector('.step-icon').textContent='✓';}
+    else if(i===n){el.className='step-item active';if(!el.querySelector('.spinner')){const sp=document.createElement('div');sp.className='spinner';el.prepend(sp);}}
+    else el.className='step-item';
+  }
+}
+
+function renderGate(v,budget){
+  document.getElementById('gate').style.display='block';
+  const{score,breakdown,unlocksPaidLayer,verdict,threshold}=v;
+  const col=score>=threshold?'#00e5a0':score>=threshold*.6?'#f59e0b':'#ef4444';
+  document.getElementById('scoreNum').textContent=score;
+  document.getElementById('scoreNum').style.color=col;
+  document.getElementById('gateBadge').textContent=score+'/100';
+  document.getElementById('gateBadge').style.color=col;
+  document.getElementById('scoreVerdict').textContent=unlocksPaidLayer?'✅ Claude 解除':'🔒 スコア不足';
+  document.getElementById('scoreDetail').textContent=verdict;
+  const tf=document.getElementById('tbarFill');tf.style.width=score+'%';tf.className='tbar-fill '+(score>=threshold?'above':'below');
+  if(ringChart)ringChart.destroy();
+  ringChart=new Chart(document.getElementById('scoreRing').getContext('2d'),{type:'doughnut',data:{datasets:[{data:[score,100-score],backgroundColor:[col,'rgba(255,255,255,.06)'],borderWidth:0}]},options:{cutout:'76%',plugins:{legend:{display:false},tooltip:{enabled:false}},animation:{duration:700}}});
+  const lbls={googleTrend:'Google Trends',rakutenDemand:'楽天需要',youtubeVolume:'YouTube',yahooShopping:'Yahoo!'};
+  document.getElementById('breakdownRows').innerHTML=Object.entries(breakdown).map(([k,val])=>{
+    const pct=Math.round(val.points/val.max*100);
+    return'<div class="br-row"><div class="br-lbl">'+(lbls[k]||k)+'</div><div class="br-track"><div class="br-fill" style="width:'+pct+'%"></div></div><div class="br-pts">'+val.points+'/'+val.max+'</div></div>';
+  }).join('');
+  const zone=document.getElementById('cgate'),btn=document.getElementById('btnClaude'),icon=document.getElementById('cgateIcon'),lbl=document.getElementById('cgateLbl'),note=document.getElementById('cgateNote'),capped=budget&&!budget.allowed;
+  if(capped){zone.className='cgate capped';icon.textContent='🚫';lbl.textContent='月額予算 ¥3,000 に達しました。';btn.className='btn-claude capped';btn.textContent='予算上限';btn.disabled=true;note.textContent='残予算: ¥0';}
+  else if(unlocksPaidLayer){zone.className='cgate unlocked';icon.textContent='🚀';lbl.innerHTML='スコア <strong style="color:var(--g)">'+score+'/100</strong> — Claude 解除！';btn.className='btn-claude unlocked';btn.textContent='Claude でWebサイト生成（~¥45）';btn.disabled=false;note.textContent='残予算: ¥'+(budget?.remainingJpy??'—')+' / ¥3,000';}
+  else{zone.className='cgate locked';icon.textContent='🔒';lbl.innerHTML='スコア <strong style="color:#f87171">'+score+'/100</strong> — あと <strong style="color:#f59e0b">'+(threshold-score)+'点</strong> で解除';btn.className='btn-claude locked';btn.textContent='スコア不足';btn.disabled=true;note.textContent='必要: '+threshold+' / 現在: '+score;}
+}
+
+async function runClaude(){
+  if(!currentData)return;
+  const btn=document.getElementById('btnClaude'),zone=document.getElementById('cgate');
+  btn.className='btn-claude running';btn.textContent='Claude 生成中…';btn.disabled=true;
+  zone.className='cgate unlocked';document.getElementById('cgateIcon').textContent='⏳';
+  try{
+    const kw=document.getElementById('keyword').value.trim();
+    const resp=await fetch('/api/analyze?keyword='+encodeURIComponent(kw)+'&force_claude=1');
+    let data;try{data=await resp.json();}catch{throw new Error('Invalid response');}
+    if(!resp.ok||data.error)throw new Error(data.error||'Server error');
+    const site=data.result?.websiteHTML;
+    if(site){
+      genHTML=site;document.getElementById('siteFrame').srcdoc=site;
+      const badge=document.getElementById('genBadge');
+      if(data.result?.generatedBy==='claude-haiku'){badge.textContent='Claude Haiku ✨';badge.className='gen-badge claude';}
+      if(data.budgetStatus)refreshBPill(data.budgetStatus.totalSpendJpy??0);
+    }
+    btn.textContent='✓ 完了';btn.style.cssText='background:rgba(0,229,160,.12);border:1px solid rgba(0,229,160,.3);color:var(--g);width:100%;padding:13px;border-radius:10px;font-size:14px;font-weight:700;font-family:var(--ff)';
+    document.getElementById('cgateIcon').textContent='✅';
+  }catch(e){btn.className='btn-claude capped';btn.textContent='⚠ '+e.message;document.getElementById('cgateIcon').textContent='⚠️';}
+}
+
+function fill(kw){document.getElementById('keyword').value=kw;document.getElementById('keyword').focus();}
+document.getElementById('keyword').addEventListener('keydown',e=>{if(e.key==='Enter')analyze();});
+function showErr(msg){document.getElementById('progress').style.display='none';document.getElementById('btnAnalyze').disabled=false;const b=document.getElementById('errorBox');b.textContent='⚠ '+msg;b.style.display='block';}
+
+async function analyze(){
+  const kw=document.getElementById('keyword').value.trim();
+  if(!kw){alert('キーワードを入力してください');return;}
+  tickerAdd(kw);
+  document.getElementById('btnAnalyze').disabled=true;
+  document.getElementById('progress').style.display='block';
+  document.getElementById('results').style.display='none';
+  document.getElementById('gate').style.display='none';
+  document.getElementById('errorBox').style.display='none';
+  document.getElementById('dsGrid').style.display='none';
+  document.getElementById('btnDL').style.display='none';
+  document.getElementById('siteFrame').srcdoc='';
+  genHTML='';setStep(1);
+  document.getElementById('progress').scrollIntoView({behavior:'smooth',block:'start'});
+  try{
+    setTimeout(()=>setStep(2),1800);setTimeout(()=>setStep(3),3800);setTimeout(()=>setStep(4),5500);
+    const resp=await fetch('/api/analyze?keyword='+encodeURIComponent(kw));
+    let data;try{data=await resp.json();}catch{showErr('サーバーエラー — Vercelのログを確認してください');return;}
+    if(!resp.ok||data.error){showErr(data.error||'サーバーエラー');return;}
+    currentData=data;
+    document.getElementById('progress').style.display='none';
+    tickerScore(kw,data.trend?.score);
+    renderTrend(data.trend,kw);
+    renderDS(data.rakuten,data.youtube,data.yahoo,data.estat);
+    renderPlan(data.result?.businessPlan,data.validation);
+    const site=data.result?.websiteHTML||'';
+    if(site){
+      genHTML=site;document.getElementById('siteFrame').srcdoc=site;
+      document.getElementById('siteUrl').textContent=kw.toLowerCase().replace(/\s+/,'-')+'.jp';
+      document.getElementById('btnDL').style.display='block';
+      const badge=document.getElementById('genBadge');
+      badge.textContent=data.result?.generatedBy==='claude-haiku'?'Claude Haiku ✨':'Groq';
+      badge.className='gen-badge '+(data.result?.generatedBy==='claude-haiku'?'claude':'groq');
+    }
+    document.getElementById('results').style.display='block';
+    if(data.validation){renderGate(data.validation,data.budgetStatus);document.getElementById('gate').scrollIntoView({behavior:'smooth',block:'start'});}
+    if(data.budgetStatus)refreshBPill(data.budgetStatus.totalSpendJpy??0);
+    document.getElementById('btnAnalyze').disabled=false;
+  }catch(e){showErr(e.message||'ネットワークエラー');}
+}
+
+function renderTrend(data){
+  document.getElementById('results').style.display='block';
+  document.getElementById('resKeyword').textContent=data.keyword;
+  document.getElementById('resTrend').textContent=data.trend;
+  document.getElementById('statScore').textContent=data.score;
+  document.getElementById('statAvg').textContent=data.avg;
+  document.getElementById('statRecent').textContent=data.recentAvg;
+  if(mainChart)mainChart.destroy();
+  mainChart=new Chart(document.getElementById('trendChart').getContext('2d'),{
     type:'line',
-    data:{labels:['Jan','Feb','Mar','Apr','May'], datasets:[{data:[40,55,45,70,currentScore], borderColor:'#00e5a0', tension:0.4}]},
-    options:{maintainAspectRatio:false, plugins:{legend:{display:false}}}
+    data:{labels:data.values.map(d=>d.date.slice(0,6)),datasets:[{data:data.values.map(d=>d.value),fill:true,tension:.4,borderColor:'#00e5a0',borderWidth:2,backgroundColor:'rgba(0,229,160,.06)',pointRadius:0}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#4a5568',font:{size:9},maxTicksLimit:6},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#4a5568',font:{size:9}},grid:{color:'rgba(255,255,255,.04)'},min:0,max:100}}}
   });
 }
+function setB(id,live){const el=document.getElementById(id);if(!el)return;el.textContent=live?'LIVE':'MOCK';el.className='lbadge '+(live?'live':'mock');}
+function renderDS(r,yt,yh,es){
+  document.getElementById('dsGrid').style.display='grid';
+  setB('rBadge',r&&!r.mock);if(r&&!r.mock){const d=r.demandSignal;document.getElementById('rCount').textContent=d.itemCount.toLocaleString();document.getElementById('rDemand').textContent=d.level;document.getElementById('rPrice').textContent='¥'+d.avgPrice.toLocaleString();document.getElementById('rReviews').textContent=d.totalReviews.toLocaleString();}
+  setB('ytBadge',yt&&!yt.mock);if(yt&&!yt.mock){document.getElementById('ytResults').textContent=(yt.totalResults||0).toLocaleString();const avg=yt.avgViews||0;document.getElementById('ytViews').textContent=avg>=10000?Math.round(avg/10000)+'万':avg.toLocaleString();}
+  setB('yhBadge',yh&&!yh.mock);if(yh&&!yh.mock){document.getElementById('yhHits').textContent=(yh.totalHits||0).toLocaleString();document.getElementById('yhPrice').textContent=yh.avgPrice?'¥'+yh.avgPrice.toLocaleString():'—';}
+  setB('esBadge',es&&!es.mock);if(es&&!es.mock){document.getElementById('esCount').textContent=es.statsCount||0;document.getElementById('esUnit').textContent=es.seriesData?.unit||'—';}
+}
+function renderPlan(bp){
+  if(!bp)return;
+  const s_=(l,t)=>t?'<div class="plan-sec"><div class="plan-sec-lbl">'+l+'</div><p>'+t+'</p></div>':'';
+  const ls=(l,it)=>it?.length?'<div class="plan-sec"><div class="plan-sec-lbl">'+l+'</div><ul>'+it.map(i=>'<li>'+i+'</li>').join('')+'</ul></div>':'';
+  const ss=(l,kws)=>kws?.length?'<div class="plan-sec"><div class="plan-sec-lbl">'+l+'</div><div class="seo-tags">'+kws.map(k=>'<span class="seo-tag">'+k+'</span>').join('')+'</div></div>':'';
+  document.getElementById('planBody').innerHTML='<div class="plan-title">'+(bp.title||'')+'</div><div class="plan-tag">"'+(bp.tagline||'')+'"</div>'+s_('🎯 チャンス',bp.opportunity)+s_('👥 ターゲット',bp.target)+s_('💡 サービス',bp.service)+ls('⚡ 差別化',bp.differentiation)+s_('💰 収益',bp.revenueModel)+ls('🚀 アクション',bp.actionPlan)+ss('🔍 SEO',bp.seoKeywords)+s_('⚠️ リスク',bp.risk);
+}
+function downloadSite(){if(!genHTML)return;const b=new Blob([genHTML],{type:'text/html'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='SSI-AI-site.html';a.click();URL.revokeObjectURL(u);}
 
-window.onload = () => { renderTicker(); updateBudgetUI(); };
+/* ── INIT ── */
+updateGear();
+updateBanner();
+refreshBudgetUI();
+loadLiveData();
 </script>
 </body>
 </html>
