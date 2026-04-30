@@ -664,7 +664,7 @@ async function loadDec(svc){if(!_vk)return'';const r=localStorage.getItem(NS+svc
 const hasKey=s=>!!localStorage.getItem(NS+s);
 
 /* ── KEY SERVICES ──────────────────────────────────── */
-const SVCS=[{id:'gemini',name:'Gemini 1.5 Flash',sub:'Google AI Studio',
+const SVCS=[{id:'gemini',name:'Gemini 2.0 Flash',sub:'Google AI Studio',
   desc:'補助AI分析 · 無料取得可能',docs:'https://aistudio.google.com/app/apikey',
   ph:'AIza••••••••••••••••••••••••••••'}];
 const fst={};
@@ -696,7 +696,7 @@ async function testK(id){
   setKSt(id,r.ok?'ok':'err',(r.ok?'✓ ':' ✗ ')+r.msg);document.getElementById('kt-'+id).disabled=false;
 }
 async function pingGemini(key){
-  const u=new URL('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent');u.searchParams.set('key',key);
+  const u=new URL('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent');u.searchParams.set('key',key);
   const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:'Hi'}]}]})});
   const d=await r.json();return r.ok?{ok:true,msg:'Gemini OK'}:{ok:false,msg:d?.error?.message||'HTTP '+r.status};
 }
