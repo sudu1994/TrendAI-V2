@@ -2,9 +2,12 @@
  * validator.js — Phase 2 Gatekeeper
  * Computes a 0–100 validation score from Free Layer data.
  * Claude (Paid Layer) is only unlocked if score >= THRESHOLD.
+ *
+ * Score pipeline:
+ *   Keyword → Trend/Demand → Base Score → e-Stat Boost (60–75 range) → Final Score → Gate
  */
 
-const THRESHOLD = 70; // score required to unlock Paid Layer
+const THRESHOLD = 70;
 
 /**
  * computeValidationScore
@@ -13,10 +16,16 @@ const THRESHOLD = 70; // score required to unlock Paid Layer
  *   Rakuten demand level       → 30 pts
  *   YouTube content volume     → 20 pts
  *   Yahoo! Shopping volume     → 15 pts
+ *   e-Stat boost               → up to +15 pts (only when base score 60–75)
  *
- * @returns {{ score: number, breakdown: object, unlocksPaidLayer: boolean }}
+ * @param {object} trend
+ * @param {object} rakuten
+ * @param {object} youtube
+ * @param {object} yahoo
+ * @param {object|null} estat  — result from fetchEstatBoost(), or null to skip
+ * @returns {{ score, breakdown, unlocksPaidLayer, estat }}
  */
-function computeValidationScore(trend, rakuten, youtube, yahoo) {
+function computeValidationScore(trend, rakuten, youtube, yahoo, estat = null) {
   let score = 0;
   const breakdown = {};
 
@@ -43,16 +52,42 @@ function computeValidationScore(trend, rakuten, youtube, yahoo) {
   score += yhPts;
   breakdown.yahooShopping = { raw: yhHits, points: yhPts, max: 15 };
 
-  score = Math.min(100, score);
+  const baseScore = Math.min(100, score);
+  breakdown.baseScore = baseScore;
+
+  // ── e-Stat Boost (only when base score is 60–75) ────────────────
+  let estatResult = { marketSize: 0, boost: 0, source: 'skipped', error: null };
+  if (estat && baseScore >= 60 && baseScore <= 75) {
+    const boost = estat.boost ?? 0;
+    estatResult = {
+      marketSize: estat.marketSize ?? 0,
+      boost,
+      category:   estat.category ?? 'general',
+      source:     estat.source ?? 'mock',
+      error:      estat.error  ?? null,
+    };
+    score = Math.min(100, baseScore + boost);
+    breakdown.estatBoost = { marketSize: estatResult.marketSize, boost, appliedRange: '60–75' };
+  } else if (estat === null || baseScore < 60 || baseScore > 75) {
+    score = baseScore;
+    breakdown.estatBoost = {
+      skipped: true,
+      reason: estat === null ? 'e-Stat not called' : `base score ${baseScore} outside 60–75 range`,
+    };
+  }
+
+  const finalScore = Math.min(100, score);
 
   return {
-    score,
+    score: finalScore,
+    baseScore,
     threshold: THRESHOLD,
-    unlocksPaidLayer: score >= THRESHOLD,
+    unlocksPaidLayer: finalScore >= THRESHOLD,
     breakdown,
-    verdict: score >= THRESHOLD
-      ? `✅ スコア ${score}/100 — Claude生成が解除されました`
-      : `🔒 スコア ${score}/100 — Claude生成にはスコア${THRESHOLD}以上が必要です`,
+    estat: estatResult,
+    verdict: finalScore >= THRESHOLD
+      ? `✅ スコア ${finalScore}/100 — Claude生成が解除されました`
+      : `🔒 スコア ${finalScore}/100 — Claude生成にはスコア${THRESHOLD}以上が必要です`,
   };
 }
 
