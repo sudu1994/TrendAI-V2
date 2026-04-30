@@ -410,51 +410,34 @@ footer{text-align:center;padding:24px 16px 32px;color:var(--sub);font-size:11px;
 <div class="overlay" id="settingsModal">
 <div class="modal">
   <div class="mh">
-    <div><div class="mh-title">⚙ API Key Settings</div>
-    <div class="mh-sub">BYOK — AES-256-GCM encrypted · zero-log proxy</div></div>
+    <div><div class="mh-title">💴 月次予算トラッカー</div>
+    <div class="mh-sub">Claude 会社負担 · ¥3,000 / 月上限</div></div>
     <button class="mh-x" onclick="closeSettings()">×</button>
   </div>
   <div class="mb">
-    <div class="m-tabs">
-      <button class="tab-btn active" onclick="switchTab('keys',this)">🔑 API Keys</button>
-      <button class="tab-btn" onclick="switchTab('budget',this)">💴 Budget ¥3,000</button>
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px">
+      <div style="font-size:11px;font-family:var(--fm);font-weight:700;color:var(--txt);text-transform:uppercase;letter-spacing:.07em">Monthly Spend</div>
+      <button style="font-size:10px;font-family:var(--fm);color:var(--sub);background:none;border:1px solid var(--bdr);border-radius:5px;padding:3px 9px;cursor:pointer" onclick="resetBudget()">↺ Reset</button>
     </div>
-    <div class="tab-pane active" id="tab-keys">
-      <div class="master-row">
-        <div class="master-lbl">🔐 Master Password<span class="master-note"> — PBKDF2 · AES-256-GCM</span></div>
-        <div class="master-inner">
-          <input class="master-inp" type="password" id="masterPwd" placeholder="パスワードを入力して Unlock…" autocomplete="new-password">
-          <button class="btn-unlock" onclick="unlockVault()">Unlock</button>
-        </div>
-        <div class="unlock-st" id="unlockStatus"></div>
-      </div>
-      <div class="sec-notice">
-        <strong>Security:</strong> キーは AES-256-GCM 暗号化後 localStorage へ。
-        Gemini は BYOK。Claude は <code>ANTHROPIC_CORP_KEY</code>（Vercel環境変数）でサーバー側実行。
-      </div>
-      <div id="keyFields"></div>
+    <div class="spend-meter">
+      <div class="spend-amt ok" id="spendAmount">¥0</div>
+      <div class="spend-lbl" id="spendLabel">of ¥3,000 cap · <span id="spendPct">0%</span> used</div>
+      <div class="spend-bar"><div class="spend-fill ok" id="spendFill" style="width:0%"></div></div>
     </div>
-    <div class="tab-pane" id="tab-budget">
-      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px">
-        <div style="font-size:11px;font-family:var(--fm);font-weight:700;color:var(--txt);text-transform:uppercase;letter-spacing:.07em">Monthly Spend</div>
-        <button style="font-size:10px;font-family:var(--fm);color:var(--sub);background:none;border:1px solid var(--bdr);border-radius:5px;padding:3px 9px;cursor:pointer" onclick="resetBudget()">↺ Reset</button>
-      </div>
-      <div class="spend-meter">
-        <div class="spend-amt ok" id="spendAmount">¥0</div>
-        <div class="spend-lbl" id="spendLabel">of ¥3,000 cap · <span id="spendPct">0%</span> used</div>
-        <div class="spend-bar"><div class="spend-fill ok" id="spendFill" style="width:0%"></div></div>
-      </div>
-      <div class="spend-stats">
-        <div class="ss"><div class="ss-v" id="statSearches">0</div><div class="ss-l">Calls</div></div>
-        <div class="ss"><div class="ss-v">¥45</div><div class="ss-l">Per Call</div></div>
-        <div class="ss"><div class="ss-v" id="statRemaining">¥3,000</div><div class="ss-l">Left</div></div>
-      </div>
-      <div class="bwarn" id="budgetWarnBox">⚠ 月額¥3,000上限に達しました。Claude生成は停止中です。</div>
+    <div class="spend-stats">
+      <div class="ss"><div class="ss-v" id="statSearches">0</div><div class="ss-l">Calls</div></div>
+      <div class="ss"><div class="ss-v">¥45</div><div class="ss-l">Per Call</div></div>
+      <div class="ss"><div class="ss-v" id="statRemaining">¥3,000</div><div class="ss-l">Left</div></div>
+    </div>
+    <div class="bwarn" id="budgetWarnBox">⚠ 月額¥3,000上限に達しました。Claude生成は停止中です。</div>
+    <div style="margin-top:12px;border:1px solid var(--bdr);border-radius:10px;padding:10px 12px;font-size:11px;font-family:var(--fm);color:var(--sub);line-height:1.7">
+      🔑 全APIキーは <strong style="color:var(--txt)">Vercel 環境変数</strong> で管理<br>
+      <span style="color:var(--dim)">ANTHROPIC_CORP_KEY · GROQ_API_KEY · SERPAPI_KEY<br>RAKUTEN_APP_ID · YOUTUBE_API_KEY</span>
     </div>
   </div>
   <div class="m-foot">
-    <button class="btn-clr" onclick="clearAllKeysUI()">✕ Clear All Keys</button>
-    <div class="mfoot-n">AES-GCM · /api/proxy<br>zero-log</div>
+    <div style="font-size:11px;font-family:var(--fm);color:var(--dim)">Claude Haiku · 会社負担</div>
+    <div class="mfoot-n">Vercel env vars only<br>no BYOK needed</div>
   </div>
 </div>
 </div>
@@ -466,7 +449,7 @@ footer{text-align:center;padding:24px 16px 32px;color:var(--sub);font-size:11px;
     <div class="live-pill"><span class="live-dot"></span>LIVE</div>
     <div class="bpill ok" id="headerBudgetPill" onclick="openSettings('budget')" title="月次予算">¥0 / ¥3k</div>
     <span class="corp-badge">社内版</span>
-    <button class="btn-gear" id="btnGear" onclick="openSettings('keys')">⚙</button>
+    <button class="btn-gear" id="btnGear" onclick="openSettings()" title="月次予算">💴</button>
   </div>
 </header>
 
@@ -486,9 +469,6 @@ footer{text-align:center;padding:24px 16px 32px;color:var(--sub);font-size:11px;
   <div class="search-box">
     <input type="text" id="keyword" placeholder="例：パーソナルジム、副業、ミールキット…" autocomplete="off">
     <button class="btn-go" id="btnAnalyze" onclick="analyze()">分析 →</button>
-  </div>
-  <div class="nokey-banner hidden" id="nokeyBanner" onclick="openSettings('keys')">
-    ⚠ Gemini APIキー未設定 — タップして設定（Google AI Studioで無料取得）
   </div>
   <div class="sug-row" id="sugRow">
     <span class="sug-lbl">今注目：</span>
@@ -629,7 +609,6 @@ footer{text-align:center;padding:24px 16px 32px;color:var(--sub);font-size:11px;
     <span class="foot-item"><span class="foot-dot" style="background:#e6000d"></span>楽天市場</span>
     <span class="foot-item"><span class="foot-dot" style="background:#f00"></span>YouTube</span>
     <span class="foot-item"><span class="foot-dot" style="background:#ff0033"></span>Yahoo!</span>
-    <span class="foot-item"><span class="foot-dot" style="background:#a78bfa"></span>Gemini (BYOK)</span>
     <span class="foot-item"><span class="foot-dot" style="background:#00e5a0"></span>Claude Haiku</span>
   </div>
   <div class="foot-bottom">
@@ -641,76 +620,17 @@ footer{text-align:center;padding:24px 16px 32px;color:var(--sub);font-size:11px;
 
 <script>
 'use strict';
-/* ── AES-256-GCM VAULT ─────────────────────────────── */
-const NS='ssi_byok_';let _vk=null;
-const _e=new TextEncoder(),_d=new TextDecoder();
-const h2a=h=>new Uint8Array(h.match(/.{2}/g).map(b=>parseInt(b,16)));
-const a2h=a=>Array.from(a).map(b=>b.toString(16).padStart(2,'0')).join('');
-async function deriveKey(p,s){
-  const k=await crypto.subtle.importKey('raw',_e.encode(p),'PBKDF2',false,['deriveKey']);
-  return crypto.subtle.deriveKey({name:'PBKDF2',salt:h2a(s),iterations:200000,hash:'SHA-256'},k,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
-}
-async function enc(p,k){const iv=crypto.getRandomValues(new Uint8Array(12));const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},k,_e.encode(p));return a2h(iv)+':'+a2h(new Uint8Array(ct));}
-async function dec(s,k){const[ih,ch]=s.split(':');return _d.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:h2a(ih)},k,h2a(ch)));}
-function getSalt(){let s=localStorage.getItem(NS+'salt');if(!s){s=a2h(crypto.getRandomValues(new Uint8Array(16)));localStorage.setItem(NS+'salt',s);}return s;}
-async function unlockVault(){
-  const p=document.getElementById('masterPwd').value,el=document.getElementById('unlockStatus');
-  if(!p){setSt(el,'err','パスワードを入力してください');return;}
-  try{_vk=await deriveKey(p,getSalt());const t=localStorage.getItem(NS+'gemini');if(t)await dec(t,_vk);setSt(el,'ok','✓ Vault unlocked');await loadFromVault();updateGear();}
-  catch{_vk=null;setSt(el,'err','Wrong password');}
-}
-async function saveEnc(svc,val){if(!_vk){alert('先にUnlockしてください');return false;}if(!val.trim()){localStorage.removeItem(NS+svc);return true;}localStorage.setItem(NS+svc,await enc(val.trim(),_vk));return true;}
-async function loadDec(svc){if(!_vk)return'';const r=localStorage.getItem(NS+svc);if(!r)return'';try{return await dec(r,_vk);}catch{return'';}}
-const hasKey=s=>!!localStorage.getItem(NS+s);
+/* ── MODAL (Budget only) ───────────────────────────── */
 
-/* ── KEY SERVICES ──────────────────────────────────── */
-const SVCS=[{id:'gemini',name:'Gemini 2.0 Flash',sub:'Google AI Studio',
-  desc:'補助AI分析 · 無料取得可能',docs:'https://aistudio.google.com/app/apikey',
-  ph:'AIza••••••••••••••••••••••••••••'}];
-const fst={};
-function renderKeys(){
-  const c=document.getElementById('keyFields');c.innerHTML='';
-  SVCS.forEach(s=>{
-    if(!fst[s.id])fst[s.id]={value:'',dirty:false};
-    const d=document.createElement('div');d.className='key-card';
-    d.innerHTML=`<div class="kc-head"><div><div class="kc-name">${s.name}<span class="kc-sub">${s.sub}</span></div><div class="kc-desc">${s.desc}</div></div><button class="kc-link" onclick="window.open('${s.docs}','_blank')">Get key →</button></div><div class="kc-row"><input class="kc-inp" id="ki-${s.id}" type="password" placeholder="${s.ph}" autocomplete="off" oninput="onKI('${s.id}',this.value)"><button class="btn-eye" onclick="toggleEye('${s.id}')">◎</button></div><div class="kc-actions"><button class="btn-test" id="kt-${s.id}" onclick="testK('${s.id}')">▷ Test</button><button class="btn-save-k" id="ks-${s.id}" onclick="saveK('${s.id}')" style="display:none">⊕ Save</button><div class="kst" id="kst-${s.id}"></div></div>`;
-    c.appendChild(d);
-    if(hasKey(s.id)&&!_vk)setKSt(s.id,'saved','🔒 暗号化済み');
-  });
-  const n=document.createElement('div');n.className='corp-note';
-  n.innerHTML='🔒 <strong>Claude Haiku</strong> は <code>ANTHROPIC_CORP_KEY</code>（Vercel環境変数）で実行。ブラウザ入力不要。';
-  c.appendChild(n);
-}
-function onKI(id,v){fst[id].value=v;fst[id].dirty=true;setKSt(id,'','');document.getElementById('ks-'+id).style.display=v.trim()?'':'none';}
-function toggleEye(id){const i=document.getElementById('ki-'+id),b=i.nextElementSibling;i.type=i.type==='password'?'text':'password';b.textContent=i.type==='password'?'◎':'◉';}
-async function loadFromVault(){for(const s of SVCS){const v=await loadDec(s.id);const i=document.getElementById('ki-'+s.id);if(i&&v){i.value=v;fst[s.id].value=v;setKSt(s.id,'saved','✓ 読み込み済み');}}}
-async function saveK(id){const v=fst[id]?.value||document.getElementById('ki-'+id)?.value||'';if(await saveEnc(id,v)){fst[id].dirty=false;document.getElementById('ks-'+id).style.display='none';setKSt(id,'saved','✓ 保存');updateGear();updateBanner();}}
-async function clearAllKeysUI(){if(!confirm('全キーを削除しますか？'))return;SVCS.forEach(s=>localStorage.removeItem(NS+s.id));localStorage.removeItem(NS+'salt');_vk=null;document.getElementById('masterPwd').value='';renderKeys();updateGear();updateBanner();setSt(document.getElementById('unlockStatus'),'ok','削除しました');}
-function setKSt(id,type,msg){const el=document.getElementById('kst-'+id);if(!el)return;if(!msg){el.innerHTML='';return;}const dc={ok:'ok',err:'err',testing:'testing',saved:'saved'}[type]||'';el.className='kst'+(type?' s-'+type:'');el.innerHTML=dc?`<span class="kd ${dc}"></span>${msg}`:msg;}
-function setSt(el,type,msg){el.className='unlock-st '+type;el.textContent=msg;}
-async function testK(id){
-  const v=(document.getElementById('ki-'+id)?.value||'').trim();
-  if(!v){setKSt(id,'err','キーを入力してください');return;}
-  document.getElementById('kt-'+id).disabled=true;setKSt(id,'testing','Testing…');
-  let r;try{if(id==='gemini')r=await pingGemini(v);}catch(e){r={ok:false,msg:e.message};}
-  setKSt(id,r.ok?'ok':'err',(r.ok?'✓ ':' ✗ ')+r.msg);document.getElementById('kt-'+id).disabled=false;
-}
-async function pingGemini(key){
-  const u=new URL('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent');u.searchParams.set('key',key);
-  const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:'Hi'}]}]})});
-  const d=await r.json();return r.ok?{ok:true,msg:'Gemini OK'}:{ok:false,msg:d?.error?.message||'HTTP '+r.status};
-}
-
-/* ── MODAL ─────────────────────────────────────────── */
-function openSettings(tab='keys'){
+/* ── MODAL (Budget only — no BYOK keys needed) ─────── */
+function openSettings(tab='budget'){
   document.getElementById('settingsModal').classList.add('open');
-  renderKeys();refreshBudgetUI();
-  if(tab==='budget'){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));document.getElementById('tab-budget').classList.add('active');document.querySelector('.tab-btn:last-child').classList.add('active');}
+  refreshBudgetUI();
 }
 function closeSettings(){document.getElementById('settingsModal').classList.remove('open');}
 function switchTab(id,btn){document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.getElementById('tab-'+id).classList.add('active');if(btn)btn.classList.add('active');}
-function updateGear(){document.getElementById('btnGear').classList.toggle('has-keys',SVCS.some(s=>hasKey(s.id)));}
-function updateBanner(){document.getElementById('nokeyBanner').classList.toggle('hidden',hasKey('gemini'));}
+function updateGear(){}
+function updateBanner(){document.getElementById('nokeyBanner').classList.add('hidden');}
 document.getElementById('settingsModal').addEventListener('click',e=>{if(e.target===document.getElementById('settingsModal'))closeSettings();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSettings();});
 
@@ -748,7 +668,11 @@ const sSess=a=>sessionStorage.setItem('ssi_r',JSON.stringify(a));
 function tickerAdd(kw){const r=gSess().filter(x=>x.kw!==kw);r.unshift({kw,score:null,isNew:true,src:'user'});sSess(r.slice(0,8));rebuildTicker();}
 function tickerScore(kw,score){const r=gSess();const i=r.findIndex(x=>x.kw===kw);if(i!==-1){r[i]={...r[i],score,isNew:false};sSess(r);rebuildTicker();}}
 function mkTI(item,rank){
-  const badge=item.src==='user'&&item.isNew?`<span class="ti-badge new">NEW</span>`:item.src==='youtube'?`<span class="ti-badge live">YT</span>`:`<span class="ti-badge rank">#${rank}</span>`;
+  const badge=item.src==='user'&&item.isNew
+    ?`<span class="ti-badge new">NEW</span>`
+    :item.src==='live'
+      ?`<span class="ti-badge live">JP</span>`
+      :`<span class="ti-badge rank">#${rank}</span>`;
   const sc=item.score!=null?`<span class="ti-score">${item.score}</span>`:item.isNew?`<span style="font-size:9px;color:var(--g);opacity:.4">…</span>`:'';
   const arr=item.up==null?'':item.up?`<span class="ti-arr up">▲</span>`:`<span class="ti-arr dn">▼</span>`;
   return`<span class="ti">${badge}<span class="ti-kw">${item.kw}</span>${sc}${arr}</span><span class="ti-sep">·</span>`;
@@ -778,14 +702,24 @@ function updateSuggestions(keywords){
 }
 async function loadLiveData(){
   try{
-    const r=await fetch('/api/youtube');
+    const r=await fetch('/api/trending');
     if(!r.ok)throw new Error();
     const data=await r.json();
-    const kws=data.trendKeywords||data.data?.trendKeywords||[];
-    if(kws.length){
-      liveItems=kws.slice(0,12).map((k,i)=>({kw:k.word,score:Math.min(99,Math.round(55+(kws.length-i)*3.5)),up:i<kws.length/2,src:'youtube'}));
+    const items=data.trending||[];
+    if(items.length){
+      liveItems=items.map((k,i)=>({kw:k.keyword,score:k.score,up:i<items.length/2,src:data.source==='static'?'seed':'live'}));
       rebuildTicker();
-      updateSuggestions(kws);
+      // suggestions: show top 5 as chips
+      const el=document.getElementById('sugRow');
+      el.innerHTML='<span class="sug-lbl">今注目：</span>';
+      items.slice(0,5).forEach((k,i)=>{
+        const btn=document.createElement('button');
+        btn.className='sug-btn live';
+        btn.style.animation=`popIn .3s ease ${i*60}ms both`;
+        btn.textContent=k.keyword;
+        btn.onclick=()=>fill(k.keyword);
+        el.appendChild(btn);
+      });
     }
   }catch{rebuildTicker();}
 }
