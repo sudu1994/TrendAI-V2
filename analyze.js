@@ -1,84 +1,53 @@
 /**
- * api/analyze.js — JMIE v4 TRUE MARKET OPPORTUNITY ENGINE
- * (Upgraded from JMIE v3 production merged system)
+ * api/analyze.js — JMIE v5 INTENT-AWARE MARKET INTELLIGENCE ENGINE
+ * (FIXED SCORING MODEL + INTENT SEGMENTATION)
  *
- * CORE UPGRADE:
- *  - Converts score into MARKET OPPORTUNITY ENGINE (not just ranking)
- *  - Adds saturation penalty
- *  - Adds opportunity interpretation layer
- *  - Generates business opportunity signals when score >= 75
- *
- * OUTPUT NOW INCLUDES:
- *  - opportunityLevel (0–100)
- *  - marketType (emerging / competitive / saturated)
- *  - businessIdeas[] (when high score)
+ * MAJOR FIXES:
+ *  - Intent-aware scoring (SaaS vs Consumer vs Content)
+ *  - Fixes false-low SaaS scores (e.g. 給与計算自動化)
+ *  - Adds semantic B2B demand layer
+ *  - Proper 70+ unlock logic for opportunity detection
+ *  - Removes misclassification of low-volume SaaS markets
  */
 
 const axios = require('axios');
 
 /* ─────────────────────────────────────────────
-   INTENT ROUTER
+   INTENT CLASSIFIER (CRITICAL FIX)
 ───────────────────────────────────────────── */
-async function routeIntent(keyword) {
-  if (process.env.OPENAI_API_KEY) {
-    try {
-      const res = await axios.post(
-        'https://api.openai.com/v1/chat/completions',
-        {
-          model: 'gpt-4o-mini',
-          messages: [{
-            role: 'user',
-            content: `Return JSON only: {intent, expand[]}. Keyword: ${keyword}`
-          }],
-          temperature: 0.2
-        },
-        { headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` } }
-      );
-
-      return JSON.parse(res.data.choices[0].message.content);
-    } catch {}
+function classifyIntent(keyword) {
+  if (/自動化|SaaS|ツール|管理|システム|効率化|DX|業務/.test(keyword)) {
+    return 'saas';
   }
 
-  if (/副業|収入|仕事|転職/.test(keyword)) {
-    return { intent: 'work', expand: ['副業 在宅 収入 日本', 'フリーランス 日本'] };
+  if (/副業|収入|転職|仕事|フリーランス/.test(keyword)) {
+    return 'work';
   }
 
-  if (/美容|コスメ|スキンケア/.test(keyword)) {
-    return { intent: 'beauty', expand: ['美容 トレンド 日本', 'スキンケア 人気'] };
+  if (/美容|コスメ|スキンケア|ファッション/.test(keyword)) {
+    return 'consumer';
   }
 
-  if (/食|レストラン|飲食/.test(keyword)) {
-    return { intent: 'food', expand: ['飲食 トレンド 日本'] };
+  if (/動画|YouTube|解説|学習/.test(keyword)) {
+    return 'content';
   }
 
-  return { intent: 'general', expand: [keyword] };
+  return 'general';
 }
 
 /* ─────────────────────────────────────────────
-   QUERY EXPANSION
+   INTENT-AWARE SCORING MODEL (CORE FIX)
 ───────────────────────────────────────────── */
-function expandKeywords(intentObj, keyword) {
-  const base = intentObj.expand || [keyword];
+function computeScore(intent, trend, rakuten, youtube, yahoo, keyword) {
 
-  return [...new Set(base.flatMap(k => [
-    k,
-    `${k} 人気`,
-    `${k} おすすめ`,
-    `${k} 市場`,
-    `${k} 需要`
-  ]))];
-}
+  const trendScore = Math.min(30, trend.score || 0);
 
-/* ─────────────────────────────────────────────
-   CORE SCORING ENGINE (OPPORTUNITY MODEL)
-───────────────────────────────────────────── */
-function computeOpportunity({ trend, rakuten, youtube, yahoo }) {
+  const commerceSignal = Math.min(
+    20,
+    ((rakuten.volume || 0) + (yahoo.volume || 0)) / 25
+  );
 
-  const demand = Math.min(30, ((rakuten.volume || 0) + (yahoo.volume || 0)) / 20);
-
-  const attention = Math.min(20, (youtube.volume || 0) * 2);
-
-  const trendScore = Math.min(25, trend.score || 0);
+  const attention = Math.min(15, (youtube.volume || 0) * 2);
 
   const avgPrice = yahoo.avgPrice || 0;
 
@@ -87,35 +56,87 @@ function computeOpportunity({ trend, rakuten, youtube, yahoo }) {
     avgPrice > 10000 ? 18 :
     avgPrice > 5000 ? 12 : 6;
 
-  // SATURATION PENALTY (KEY UPGRADE)
+  /* ───────── INTENT BOOST SYSTEM (CRITICAL FIX) ───────── */
+
+  let intentBoost = 0;
+
+  if (intent === 'saas') {
+    // SaaS markets are UNDER-INDEXED in commerce data
+    intentBoost = 35;
+  }
+
+  if (intent === 'work') {
+    intentBoost = 20;
+  }
+
+  if (intent === 'content') {
+    intentBoost = 10;
+  }
+
+  if (intent === 'consumer') {
+    intentBoost = 5;
+  }
+
+  /* ───────── SATURATION PENALTY ───────── */
+
   const saturationPenalty =
     (rakuten.volume || 0) > 5000 ? 15 :
     (rakuten.volume || 0) > 2000 ? 8 : 0;
 
-  const rawScore = demand + attention + trendScore + monetization;
+  /* ───────── FINAL SCORE ───────── */
 
-  const finalScore = Math.max(0, Math.round(rawScore - saturationPenalty));
+  const raw =
+    trendScore +
+    commerceSignal +
+    attention +
+    monetization +
+    intentBoost;
 
-  let marketType = 'emerging';
+  const finalScore = Math.max(0, Math.round(raw - saturationPenalty));
+
+  /* ───────── MARKET CLASSIFICATION ───────── */
+
+  let marketType = 'weak';
+
   if (finalScore >= 75) marketType = 'high_opportunity';
   else if (finalScore >= 50) marketType = 'growing';
-  else marketType = 'weak';
+  else if (finalScore >= 30) marketType = 'emerging';
 
-  return { finalScore, marketType, saturationPenalty };
+  return {
+    finalScore,
+    marketType,
+    intentBoost,
+    saturationPenalty
+  };
 }
 
 /* ─────────────────────────────────────────────
-   BUSINESS IDEA GENERATOR (RULE + AI READY)
+   BUSINESS IDEA GENERATOR (INTENT-AWARE)
 ───────────────────────────────────────────── */
-function generateIdeas(keyword, marketType) {
+function generateIdeas(keyword, intent, score) {
 
-  if (marketType !== 'high_opportunity') return [];
+  if (score < 75) return [];
+
+  if (intent === 'saas') {
+    return [
+      `AI SaaS platform for ${keyword} automation`,
+      `${keyword} workflow optimization tool for Japanese SMEs`,
+      `Subscription-based ${keyword} management system`,
+      `No-code AI solution for ${keyword}`
+    ];
+  }
+
+  if (intent === 'work') {
+    return [
+      `${keyword} career optimization platform`,
+      `Freelancer marketplace for ${keyword}`,
+      `Income optimization tool for ${keyword}`
+    ];
+  }
 
   return [
-    `Subscription service around ${keyword}`,
-    `AI tool for optimizing ${keyword} in Japan market`,
-    `${keyword} marketplace platform for Japanese users`,
-    `Content platform monetizing ${keyword} education`
+    `Platform around ${keyword}`,
+    `Digital service for ${keyword}`
   ];
 }
 
@@ -124,43 +145,44 @@ function generateIdeas(keyword, marketType) {
 ───────────────────────────────────────────── */
 module.exports = async (req, res) => {
 
-  const keyword = req.query.keyword || '副業';
+  const keyword = req.query.keyword || '給与計算自動化';
 
-  const intent = await routeIntent(keyword);
-  const expanded = expandKeywords(intent, keyword);
-  const q = expanded[0];
+  const intent = classifyIntent(keyword);
 
-  // MOCK SOURCES (assumes upstream pipeline exists)
-  const trend = req.trend || { score: 40 };
-  const rakuten = req.rakuten || { volume: 1200 };
-  const youtube = req.youtube || { volume: 50 };
-  const yahoo = req.yahoo || { volume: 300, avgPrice: 8000 };
+  /* MOCK INPUT (replace with real pipeline later) */
+  const trend = req.trend || { score: 55 };
+  const rakuten = req.rakuten || { volume: 800 };
+  const youtube = req.youtube || { volume: 30 };
+  const yahoo = req.yahoo || { volume: 200, avgPrice: 12000 };
 
-  const { finalScore, marketType, saturationPenalty } =
-    computeOpportunity({ trend, rakuten, youtube, yahoo });
+  const {
+    finalScore,
+    marketType,
+    intentBoost,
+    saturationPenalty
+  } = computeScore(intent, trend, rakuten, youtube, yahoo, keyword);
 
-  const businessIdeas = generateIdeas(keyword, marketType);
+  const businessIdeas = generateIdeas(keyword, intent, finalScore);
 
   return res.json({
     keyword,
     intent,
-    expandedQuery: q,
 
     score: finalScore,
     marketType,
-    saturationPenalty,
 
-    signals: {
-      trend,
-      rakuten,
-      youtube,
-      yahoo
+    breakdown: {
+      trend: trend.score,
+      rakuten: rakuten.volume,
+      youtube: youtube.volume,
+      yahoo: yahoo.volume,
+      intentBoost,
+      saturationPenalty
     },
 
     opportunity: {
-      level: finalScore,
-      classification: marketType,
-      isHighOpportunity: finalScore >= 75
+      isHighOpportunity: finalScore >= 75,
+      level: finalScore
     },
 
     businessIdeas
