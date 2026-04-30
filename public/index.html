@@ -701,27 +701,32 @@ function updateSuggestions(keywords){
   });
 }
 async function loadLiveData(){
+  // Always show seed suggestions immediately, replace if live data comes in
+  rebuildTicker();
   try{
     const r=await fetch('/api/trending');
-    if(!r.ok)throw new Error();
     const data=await r.json();
+    if(!r.ok)throw new Error(data.error||'HTTP '+r.status);
     const items=data.trending||[];
-    if(items.length){
-      liveItems=items.map((k,i)=>({kw:k.keyword,score:k.score,up:i<items.length/2,src:data.source==='static'?'seed':'live'}));
-      rebuildTicker();
-      // suggestions: show top 5 as chips
-      const el=document.getElementById('sugRow');
-      el.innerHTML='<span class="sug-lbl">今注目：</span>';
-      items.slice(0,5).forEach((k,i)=>{
-        const btn=document.createElement('button');
-        btn.className='sug-btn live';
-        btn.style.animation=`popIn .3s ease ${i*60}ms both`;
-        btn.textContent=k.keyword;
-        btn.onclick=()=>fill(k.keyword);
-        el.appendChild(btn);
-      });
-    }
-  }catch{rebuildTicker();}
+    if(!items.length)throw new Error('empty');
+    // Update ticker
+    liveItems=items.map((k,i)=>({kw:k.keyword,score:k.score,up:i<items.length/2,src:data.source==='static'?'seed':'live'}));
+    rebuildTicker();
+    // Update suggestion chips
+    const el=document.getElementById('sugRow');
+    el.innerHTML='<span class="sug-lbl">今注目：</span>';
+    items.slice(0,5).forEach((k,i)=>{
+      const btn=document.createElement('button');
+      btn.className='sug-btn live';
+      btn.style.animation='popIn .3s ease '+i*60+'ms both';
+      btn.textContent=k.keyword;
+      btn.onclick=()=>fill(k.keyword);
+      el.appendChild(btn);
+    });
+  }catch(e){
+    // keep seed data, at least ticker shows something
+    console.warn('trending fetch failed:',e.message);
+  }
 }
 
 /* ── MAIN STATE ────────────────────────────────────── */
