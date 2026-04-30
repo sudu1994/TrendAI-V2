@@ -1,0 +1,10 @@
+{
+  "name": "ssi-ai-corporate",
+  "version": "4.0.0",
+  "description": "SSI AI — Corporate Internal Validation Platform",
+  "engines": { "node": "20.x" },
+  "dependencies": {
+    "@google/generative-ai": "^0.11.0",
+    "axios": "^1.7.0"
+  }
+}

@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src https://fonts.gstatic.com; connect-src 'self' https://generativelanguage.googleapis.com; frame-src 'self' blob:; img-src 'self' data:; object-src 'none'; base-uri 'self';">
+<title>SSI AI — 社内バリデーションプラットフォーム</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root {
+  --bg:#08090d; --surface:#10121a; --surface2:#181c28;
+  --border:rgba(255,255,255,0.07);
+  --accent:#00e5a0; --accent2:#0098ff; --accent3:#ff6b35;
+  --warn:#f59e0b; --danger:#ef4444;
+  --text:#f0f2f8; --muted:#6b7280;
+  --fd:'Syne',sans-serif; --fb:'Noto Sans JP',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,229,160,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,160,.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+
+/* ── HEADER ── */
+header{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border);backdrop-filter:blur(12px);background:rgba(8,9,13,.92)}
+.logo{font-family:var(--fd);font-size:20px;font-weight:800;letter-spacing:-.5px}
+.logo span{color:var(--accent)}
+.header-right{display:flex;align-items:center;gap:10px}
+.badge{font-size:10px;font-weight:600;background:rgba(0,152,255,.12);color:var(--accent2);border:1px solid rgba(0,152,255,.25);padding:3px 10px;border-radius:20px;letter-spacing:1px}
+.budget-pill{font-size:10px;font-family:monospace;padding:3px 10px;border-radius:20px;border:1px solid;white-space:nowrap}
+.budget-pill.ok{color:#4ade80;border-color:rgba(74,222,128,.3);background:rgba(74,222,128,.08)}
+.budget-pill.warn{color:var(--warn);border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.08)}
+.budget-pill.danger{color:var(--danger);border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.1)}
+
+/* ── HERO ── */
+.hero{position:relative;z-index:1;text-align:center;padding:60px 20px 48px}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--accent2);font-weight:600;background:rgba(0,152,255,.08);border:1px solid rgba(0,152,255,.2);padding:6px 16px;border-radius:20px;margin-bottom:28px}
+.hero h1{font-family:var(--fd);font-size:clamp(28px,7vw,62px);font-weight:800;line-height:1.1;letter-spacing:-1px;margin-bottom:16px}
+.hero h1 .hl{color:var(--accent)}
+.hero p{font-size:14px;color:var(--muted);max-width:460px;margin:0 auto 32px;line-height:1.8}
+.search-wrap{max-width:580px;margin:0 auto;display:flex;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:8px 8px 8px 18px;transition:border-color .2s}
+.search-wrap:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,229,160,.1)}
+.search-wrap input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:15px;font-family:var(--fb);min-width:0}
+.search-wrap input::placeholder{color:var(--muted)}
+.btn-analyze{background:var(--accent);color:#000;border:none;border-radius:10px;padding:11px 20px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:var(--fd);transition:transform .15s,box-shadow .15s}
+.btn-analyze:hover{transform:scale(1.03);box-shadow:0 0 20px rgba(0,229,160,.35)}
+.btn-analyze:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.examples{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:14px}
+.examples button{background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-size:12px;padding:4px 12px;border-radius:20px;cursor:pointer;transition:all .15s;font-family:var(--fb)}
+.examples button:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ── PROGRESS ── */
+#progress{display:none;max-width:520px;margin:32px auto 0;padding:0 20px}
+.step-list{list-style:none}
+.step-item{display:flex;align-items:center;gap:14px;padding:11px 0;font-size:13px;border-bottom:1px solid var(--border);transition:all .3s;opacity:.35}
+.step-item.active{opacity:1;color:var(--accent)}.step-item.done{opacity:.6}
+.step-icon{font-size:16px;width:26px;text-align:center}
+.spinner{width:16px;height:16px;flex-shrink:0;border:2px solid rgba(0,229,160,.2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+
+/* ── VALIDATION GATE (the hero of this UI) ── */
+#validationGate{display:none;max-width:680px;margin:36px auto;padding:0 16px}
+.gate-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;overflow:hidden}
+.gate-header{padding:20px 24px;border-bottom:1px solid var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:space-between}
+.gate-title{font-family:var(--fd);font-size:15px;font-weight:700}
+.gate-subtitle{font-size:11px;color:var(--muted);margin-top:2px;font-family:monospace}
+.gate-body{padding:24px}
+
+/* Score ring */
+.score-row{display:flex;align-items:center;gap:28px;margin-bottom:24px}
+.score-ring-wrap{flex-shrink:0;position:relative;width:90px;height:90px}
+.score-ring-wrap canvas{position:absolute;inset:0}
+.score-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.score-num{font-family:var(--fd);font-size:26px;font-weight:800;line-height:1}
+.score-max{font-size:10px;color:var(--muted)}
+.score-info h3{font-family:var(--fd);font-size:17px;font-weight:700;margin-bottom:6px}
+.score-info p{font-size:12px;color:var(--muted);line-height:1.6}
+
+/* Breakdown bars */
+.breakdown{margin-bottom:24px}
+.breakdown-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.br-label{font-size:11px;color:var(--muted);width:110px;flex-shrink:0}
+.br-track{flex:1;height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden}
+.br-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),#00b8d4);transition:width .8s ease}
+.br-pts{font-size:10px;font-family:monospace;color:var(--accent);width:40px;text-align:right;flex-shrink:0}
+
+/* The Claude button — the gated CTA */
+.claude-gate-zone{border:1px dashed rgba(255,255,255,.1);border-radius:14px;padding:20px;text-align:center;position:relative;transition:all .4s}
+.claude-gate-zone.locked{background:rgba(0,0,0,.15)}
+.claude-gate-zone.unlocked{border-color:rgba(0,229,160,.3);background:rgba(0,229,160,.04)}
+.claude-gate-zone.budget-capped{border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.04)}
+
+.lock-icon{font-size:28px;margin-bottom:10px;display:block}
+.gate-cta-label{font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6}
+.gate-threshold-note{font-size:10px;font-family:monospace;margin-top:10px;opacity:.6}
+
+/* The actual locked/unlocked button */
+.btn-claude{width:100%;padding:14px 24px;border-radius:12px;font-size:15px;font-weight:700;font-family:var(--fd);cursor:pointer;transition:all .3s;position:relative;overflow:hidden}
+.btn-claude.locked{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.25);cursor:not-allowed}
+.btn-claude.locked::before{content:'🔒 ';opacity:.5}
+.btn-claude.unlocked{background:linear-gradient(90deg,#00e5a0,#00b8d4);border:none;color:#0d1117;animation:unlockGlow 2s ease-in-out infinite}
+.btn-claude.unlocked::before{content:'✨ '}
+.btn-claude.budget-capped{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#fca5a5;cursor:not-allowed}
+.btn-claude.budget-capped::before{content:'🚫 '}
+.btn-claude.running{background:linear-gradient(90deg,#0d2818,#0d1f2d);border:1px solid rgba(0,229,160,.3);color:var(--accent);cursor:not-allowed;animation:none}
+@keyframes unlockGlow{0%,100%{box-shadow:0 0 20px rgba(0,229,160,.3)}50%{box-shadow:0 0 40px rgba(0,229,160,.6)}}
+
+/* Score threshold bar */
+.threshold-bar-wrap{margin-bottom:8px}
+.threshold-bar{position:relative;height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:visible;margin-bottom:4px}
+.threshold-fill{height:100%;border-radius:4px;transition:width .8s ease}
+.threshold-fill.below{background:linear-gradient(90deg,#ef4444,#f97316)}
+.threshold-fill.above{background:linear-gradient(90deg,var(--accent),#00b8d4)}
+.threshold-line{position:absolute;top:-3px;bottom:-3px;width:2px;background:rgba(255,255,255,.35);border-radius:1px}
+.threshold-line::after{content:'70';position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:9px;font-family:monospace;color:rgba(255,255,255,.4);white-space:nowrap}
+.threshold-labels{display:flex;justify-content:space-between;font-size:9px;font-family:monospace;color:var(--muted);margin-top:4px}
+
+/* ── RESULTS ── */
+#results{display:none;max-width:1100px;margin:36px auto;padding:0 16px}
+.trend-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:24px;margin-bottom:18px;position:relative;overflow:hidden}
+.trend-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.trend-header{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px}
+.trend-keyword{font-family:var(--fd);font-size:clamp(20px,5vw,28px);font-weight:800;letter-spacing:-1px}
+.trend-badge{font-size:13px;font-weight:600;background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.25);color:var(--accent);padding:4px 12px;border-radius:10px;white-space:nowrap}
+.trend-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:10px;margin-bottom:20px}
+.stat-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center}
+.stat-val{font-family:var(--fd);font-size:24px;font-weight:800;color:var(--accent)}
+.stat-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:4px}
+.chart-wrap{height:140px}
+.data-sources-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+@media(max-width:580px){.data-sources-row{grid-template-columns:1fr}}
+.data-source-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;position:relative;overflow:hidden}
+.data-source-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.data-source-card.rakuten::before{background:linear-gradient(90deg,#e6000d,#ff6b35)}
+.data-source-card.youtube::before{background:linear-gradient(90deg,#ff0000,#ff4444)}
+.data-source-card.yahoo-shop::before{background:linear-gradient(90deg,#ff0033,#ff6b35)}
+.data-source-card.estat::before{background:linear-gradient(90deg,var(--accent2),#00e5a0)}
+.ds-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.ds-title{font-family:var(--fd);font-size:13px;font-weight:700}
+.ds-live-badge{font-size:9px;font-family:monospace;padding:2px 8px;border-radius:10px;font-weight:600}
+.ds-live-badge.live{background:rgba(74,222,128,.15);color:#4ade80;border:1px solid rgba(74,222,128,.25)}
+.ds-live-badge.mock{background:rgba(255,255,255,.05);color:var(--muted);border:1px solid var(--border)}
+.ds-metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ds-metric{text-align:center}
+.ds-metric-val{font-family:var(--fd);font-size:18px;font-weight:800;color:var(--accent)}
+.ds-metric-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-top:2px}
+.output-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:768px){.output-grid{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:18px;overflow:hidden}
+.card-header{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--border);background:var(--surface2)}
+.card-icon{font-size:16px}.card-title{font-family:var(--fd);font-weight:700;font-size:14px}
+.card-body{padding:18px}
+.plan-title{font-family:var(--fd);font-size:18px;font-weight:800;color:var(--accent);margin-bottom:4px}
+.plan-tagline{font-size:12px;color:var(--muted);margin-bottom:16px;font-style:italic}
+.plan-section{margin-bottom:14px}
+.plan-section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent2);margin-bottom:5px}
+.plan-section p,.plan-section li{font-size:12px;line-height:1.7;color:rgba(240,242,248,.8)}
+.plan-section ul{padding-left:14px}
+.seo-tags{display:flex;flex-wrap:wrap;gap:6px}
+.seo-tag{font-size:10px;padding:2px 8px;border-radius:6px;background:rgba(0,229,160,.08);color:var(--accent);border:1px solid rgba(0,229,160,.15)}
+.site-preview-toolbar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#1a1d27;border-bottom:1px solid var(--border)}
+.dot{width:8px;height:8px;border-radius:50%}.dot.r{background:#ff5f56}.dot.y{background:#ffbd2e}.dot.g{background:#27c93f}
+.site-preview-url{flex:1;background:rgba(255,255,255,.05);border-radius:5px;padding:3px 10px;font-size:10px;color:var(--muted);font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.generated-by-badge{font-size:9px;font-family:monospace;padding:2px 8px;border-radius:10px;flex-shrink:0}
+.generated-by-badge.claude{background:rgba(0,229,160,.15);color:#00e5a0;border:1px solid rgba(0,229,160,.25)}
+.generated-by-badge.groq{background:rgba(255,255,255,.06);color:var(--muted);border:1px solid var(--border)}
+.preview-frame-wrap{height:400px;overflow:hidden}
+#siteFrame{width:100%;height:100%;border:none;background:#fff}
+.btn-dl{display:block;width:100%;background:var(--surface2);border:1px solid var(--border);border-top:none;color:var(--text);text-align:center;padding:11px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s;font-family:var(--fb)}
+.btn-dl:hover{background:rgba(0,229,160,.08);color:var(--accent)}
+.error-box{display:none;max-width:500px;margin:32px auto;background:rgba(255,70,70,.08);border:1px solid rgba(255,70,70,.25);border-radius:12px;padding:18px 22px;color:#ff8080;text-align:center;font-size:13px}
+
+footer{text-align:center;padding:28px 20px;color:var(--muted);font-size:11px;border-top:1px solid var(--border);margin-top:48px;position:relative;z-index:1}
+.sudu-sig{display:inline-flex;align-items:center;gap:4px;font-family:monospace;font-size:10px;letter-spacing:.1em;color:rgba(0,229,160,.35);border:1px solid rgba(0,229,160,.15);border-radius:4px;padding:2px 7px;text-decoration:none;transition:color .2s,border-color .2s}
+.sudu-sig:hover{color:rgba(0,229,160,.75);border-color:rgba(0,229,160,.35)}
+.sudu-sig::before{content:'◈';font-size:8px}
+@media(max-width:480px){header{padding:12px 14px}.hero{padding:36px 14px 28px}.btn-analyze{padding:10px 14px;font-size:13px}}
+
+/* ── SETTINGS MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);align-items:flex-start;justify-content:center;padding:20px 16px;overflow-y:auto}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid rgba(255,255,255,.1);border-radius:20px;width:100%;max-width:540px;margin:auto;overflow:hidden;animation:modalIn .2s ease}
+@keyframes modalIn{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:none}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);background:var(--surface2)}
+.modal-title{font-family:var(--fd);font-size:14px;font-weight:700}
+.modal-sub{font-size:10px;color:var(--muted);font-family:monospace;margin-top:2px}
+.btn-modal-close{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:2px 6px;border-radius:4px}
+.btn-modal-close:hover{color:var(--text);background:rgba(255,255,255,.06)}
+.modal-body{padding:16px 20px}
+.modal-tabs{display:flex;gap:4px;margin-bottom:16px;background:rgba(0,0,0,.2);border-radius:10px;padding:4px}
+.tab-btn{flex:1;padding:6px;font-size:11px;font-family:monospace;font-weight:600;border:none;border-radius:7px;cursor:pointer;background:none;color:var(--muted);transition:all .15s;text-transform:uppercase;letter-spacing:.05em}
+.tab-btn.active{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+.tab-pane{display:none}.tab-pane.active{display:block}
+.master-row{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.15);border-radius:12px;padding:13px 15px;margin-bottom:14px}
+.master-label{font-size:11px;font-family:monospace;font-weight:600;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;margin-bottom:7px}
+.master-note{font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;font-size:10px;margin-left:6px}
+.master-input-row{display:flex;gap:8px}
+.master-input{flex:1;height:32px;background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-family:monospace;padding:0 10px;outline:none;min-width:0}
+.master-input:focus{border-color:var(--accent)}
+.btn-unlock{height:32px;padding:0 12px;background:var(--accent);color:#000;border:none;border-radius:8px;font-size:12px;font-weight:700;font-family:monospace;cursor:pointer;flex-shrink:0}
+.unlock-status{font-size:11px;font-family:monospace;margin-top:5px;min-height:14px}
+.unlock-status.ok{color:#4ade80}.unlock-status.err{color:#f87171}
+.key-card{border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,.02);padding:13px 15px;margin-bottom:10px}
+.key-card-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:9px}
+.key-meta{display:flex;align-items:center;gap:7px}
+.key-name{font-size:13px;font-weight:600}
+.key-sub{font-size:10px;font-family:monospace;color:var(--muted);border:1px solid var(--border);border-radius:3px;padding:1px 5px}
+.key-desc{font-size:11px;color:var(--muted);margin-top:2px}
+.key-docs{font-size:10px;font-family:monospace;color:var(--muted);text-decoration:underline;cursor:pointer;background:none;border:none;padding:0;white-space:nowrap}
+.key-docs:hover{color:var(--accent)}
+.key-input-row{display:flex;align-items:center;gap:6px}
+.key-input{flex:1;height:30px;background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:12px;font-family:monospace;padding:0 10px;outline:none;min-width:0}
+.key-input:focus{border-color:rgba(0,229,160,.4)}
+.key-input:disabled{opacity:.4;cursor:not-allowed}
+.btn-eye{width:26px;height:26px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;color:var(--muted);font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.btn-eye:hover{color:var(--text)}
+.key-actions{display:flex;align-items:center;gap:8px;margin-top:7px;flex-wrap:wrap}
+.btn-test{height:24px;padding:0 9px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;font-size:10px;font-family:monospace;font-weight:600;color:var(--muted);text-transform:uppercase}
+.btn-test:hover:not(:disabled){color:var(--text);border-color:rgba(255,255,255,.2)}
+.btn-test:disabled{opacity:.35;cursor:not-allowed}
+.btn-save-k{height:24px;padding:0 9px;border:1px solid rgba(0,229,160,.3);border-radius:6px;background:rgba(0,229,160,.08);cursor:pointer;font-size:10px;font-family:monospace;font-weight:600;color:var(--accent);text-transform:uppercase}
+.btn-save-k:hover{background:rgba(0,229,160,.18)}
+.k-status{font-size:10px;font-family:monospace;display:flex;align-items:center;gap:4px}
+.ks{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.ks.ok{background:#4ade80}.ks.err{background:#f87171}.ks.testing{background:var(--warn);animation:pulse 1s infinite}.ks.saved{background:var(--muted)}
+.k-status.s-ok{color:#4ade80}.k-status.s-err{color:#f87171}.k-status.s-saved{color:var(--muted)}
+.sec-notice{border:1px solid rgba(245,158,11,.2);background:rgba(245,158,11,.04);border-radius:10px;padding:9px 13px;margin-bottom:13px;font-size:11px;font-family:monospace;color:rgba(245,158,11,.6);line-height:1.7}
+.sec-notice strong{color:rgba(245,158,11,.9)}
+/* Budget tab */
+.spend-meter{background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px}
+.spend-amount{font-family:var(--fd);font-size:30px;font-weight:800;letter-spacing:-1px;margin-bottom:4px;transition:color .3s}
+.spend-amount.ok{color:var(--accent)}.spend-amount.warn{color:var(--warn)}.spend-amount.danger{color:var(--danger)}
+.spend-label{font-size:11px;color:var(--muted);font-family:monospace;margin-bottom:12px}
+.spend-track{height:7px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;margin-bottom:6px}
+.spend-fill{height:100%;border-radius:4px;transition:width .5s ease,background .3s}
+.spend-fill.ok{background:linear-gradient(90deg,var(--accent),#00b8d4)}.spend-fill.warn{background:linear-gradient(90deg,var(--warn),#f97316)}.spend-fill.danger{background:linear-gradient(90deg,var(--danger),#dc2626)}
+.spend-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.spend-stat{background:rgba(0,0,0,.2);border-radius:8px;padding:9px;text-align:center}
+.spend-stat-val{font-family:var(--fd);font-size:15px;font-weight:700;color:var(--accent)}
+.spend-stat-lbl{font-size:9px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.05em}
+.budget-warning-box{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:10px;padding:10px 13px;font-size:11px;font-family:monospace;color:#fca5a5;line-height:1.6;display:none}
+.budget-warning-box.visible{display:block}
+.modal-footer{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-top:1px solid var(--border);background:var(--surface2)}
+.btn-clear-all{font-size:11px;font-family:monospace;color:rgba(248,113,113,.6);border:1px solid rgba(248,113,113,.2);background:none;border-radius:6px;padding:4px 9px;cursor:pointer}
+.btn-clear-all:hover{color:#f87171;border-color:rgba(248,113,113,.4)}
+.mf-note{font-size:10px;font-family:monospace;color:rgba(255,255,255,.15);text-align:right;line-height:1.7}
+.btn-settings{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.btn-settings:hover{border-color:var(--accent);color:var(--accent);background:rgba(0,229,160,.08)}
+.btn-settings.has-keys{border-color:rgba(0,229,160,.4);color:var(--accent)}
+.live-pill{display:flex;align-items:center;gap:5px;font-size:11px;color:#4ade80;font-family:monospace;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.2);padding:3px 9px;border-radius:20px}
+.live-dot{width:5px;height:5px;border-radius:50%;background:#4ade80;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(74,222,128,.4)}50%{opacity:.7;box-shadow:0 0 0 4px rgba(74,222,128,0)}}
+</style>
+</head>
+<body>
+
+<!-- ═══ SETTINGS MODAL ═══════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">⚙ API Key Settings</div>
+        <div class="modal-sub">BYOK — AES-256-GCM encrypted · zero-log proxy</div>
+      </div>
+      <button class="btn-modal-close" onclick="closeSettings()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-tabs">
+        <button class="tab-btn active" onclick="switchTab('keys',this)">🔑 API Keys</button>
+        <button class="tab-btn" onclick="switchTab('budget',this)">💴 Budget (¥3,000)</button>
+      </div>
+
+      <!-- KEYS TAB -->
+      <div class="tab-pane active" id="tab-keys">
+        <div class="master-row">
+          <div class="master-label">🔐 Master Password <span class="master-note">— AES-256 vault key (PBKDF2 · 200k iter)</span></div>
+          <div class="master-input-row">
+            <input class="master-input" type="password" id="masterPwd" placeholder="Enter password to unlock your encrypted vault..." autocomplete="new-password">
+            <button class="btn-unlock" onclick="unlockVault()">Unlock</button>
+          </div>
+          <div class="unlock-status" id="unlockStatus"></div>
+        </div>
+        <div class="sec-notice">
+          <strong>Security:</strong> Keys are AES-256-GCM encrypted before localStorage. Master password never leaves your device.
+          Gemini key is stored locally (BYOK). Claude &amp; server keys run via <code>ANTHROPIC_CORP_KEY</code> in Vercel — never exposed to the browser.
+        </div>
+        <div id="keyFields"></div>
+      </div>
+
+      <!-- BUDGET TAB -->
+      <div class="tab-pane" id="tab-budget">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px">
+          <div style="font-size:12px;font-family:monospace;font-weight:600;color:var(--text);text-transform:uppercase;letter-spacing:.08em">Monthly Spend Tracker</div>
+          <button style="font-size:10px;font-family:monospace;color:var(--muted);background:none;border:1px solid var(--border);border-radius:5px;padding:2px 8px;cursor:pointer" onclick="resetBudget()">↺ Reset Month</button>
+        </div>
+        <div class="spend-meter">
+          <div class="spend-amount ok" id="spendAmount">¥0</div>
+          <div class="spend-label" id="spendLabel">of ¥3,000 monthly cap · <span id="spendPct">0%</span> used</div>
+          <div class="spend-track"><div class="spend-fill ok" id="spendFill" style="width:0%"></div></div>
+        </div>
+        <div class="spend-stats">
+          <div class="spend-stat"><div class="spend-stat-val" id="statSearches">0</div><div class="spend-stat-lbl">Claude Calls</div></div>
+          <div class="spend-stat"><div class="spend-stat-val" id="statPerSearch">¥45</div><div class="spend-stat-lbl">Per Call</div></div>
+          <div class="spend-stat"><div class="spend-stat-val" id="statRemaining">¥3,000</div><div class="spend-stat-lbl">Remaining</div></div>
+        </div>
+        <div class="budget-warning-box" id="budgetWarnBox">
+          ⚠ 月額¥3,000上限に達しました。Claude生成は一時停止中です。
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-clear-all" onclick="clearAllKeysUI()">✕ Clear All Keys</button>
+      <div class="mf-note">Storage: localStorage (AES-GCM)<br>Proxy: /api/proxy · zero-log</div>
+    </div>
+  </div>
+</div>
+
+<header>
+  <div class="logo">SSI<span>-</span>AI <span style="font-size:11px;font-weight:400;color:var(--muted);font-family:monospace;letter-spacing:0">Corporate</span></div>
+  <div class="header-right">
+    <div class="live-pill"><span class="live-dot"></span>LIVE</div>
+    <div class="budget-pill ok" id="headerBudgetPill" onclick="openSettings('budget')" style="cursor:pointer" title="月次予算 — クリックで管理">¥0 / ¥3k</div>
+    <span class="badge">社内版</span>
+    <button class="btn-settings" id="btnSettings" onclick="openSettings('keys')" title="API Key Settings">⚙</button>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-eyebrow">🏢 Company-Funded · Hybrid AI · Validation-Gated</div>
+  <h1>アイデアを、<br><span class="hl">ビジネスへ。</span></h1>
+  <p>Free Layer で市場データを収集 → バリデーションスコアが<strong style="color:var(--text)">70点以上</strong>のときのみ Claude が解除されます。</p>
+
+  <div class="search-wrap">
+    <input type="text" id="keyword" placeholder="例：パーソナルジム、AI副業、ミールキット..." autocomplete="off">
+    <button class="btn-analyze" id="btnAnalyze" onclick="analyze()">分析 →</button>
+  </div>
+
+  <!-- Gemini BYOK banner — hidden once key is saved -->
+  <div id="nokeyBanner" style="max-width:580px;margin:12px auto 0;background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:9px 15px;font-size:12px;font-family:monospace;color:rgba(245,158,11,.8);display:flex;align-items:center;gap:10px;cursor:pointer;transition:border-color .2s" onclick="openSettings('keys')">
+    ⚠ Gemini APIキー未設定 — クリックして⚙設定（Google AI Studioで無料取得）
+  </div>
+
+  <div class="examples">
+    <span style="font-size:11px;color:var(--muted);padding-top:5px;">例：</span>
+    <button onclick="fill('ミールキット')">ミールキット</button>
+    <button onclick="fill('プログラミングスクール')">プログラミングスクール</button>
+    <button onclick="fill('ペットフード')">ペットフード</button>
+    <button onclick="fill('AIツール')">AIツール</button>
+  </div>
+</section>
+
+<!-- PROGRESS -->
+<div id="progress">
+  <ul class="step-list">
+    <li class="step-item" id="s1"><span class="step-icon">📡</span> Phase 1: Google Trends データ取得中...</li>
+    <li class="step-item" id="s2"><span class="step-icon">🛒</span> Phase 1: 楽天市場・YouTube・Yahoo! 照合中...</li>
+    <li class="step-item" id="s3"><span class="step-icon">🧮</span> Phase 2: バリデーションスコア計算中...</li>
+    <li class="step-item" id="s4"><span class="step-icon">🧠</span> Phase 1: Groq でビジネスプラン生成中 (¥0)...</li>
+  </ul>
+</div>
+
+<!-- VALIDATION GATE — shown after Free Layer completes -->
+<div id="validationGate">
+  <div class="gate-card">
+    <div class="gate-header">
+      <div>
+        <div class="gate-title">🎯 Phase 2 — バリデーションゲート</div>
+        <div class="gate-subtitle">Free Layer 分析完了 · Claude 解除条件: スコア ≥ 70</div>
+      </div>
+      <div id="gateScoreBadge" style="font-family:var(--fd);font-size:22px;font-weight:800;color:var(--muted)">—</div>
+    </div>
+    <div class="gate-body">
+      <!-- Score ring + verdict -->
+      <div class="score-row">
+        <div class="score-ring-wrap">
+          <canvas id="scoreRingCanvas" width="90" height="90"></canvas>
+          <div class="score-center">
+            <div class="score-num" id="scoreNum" style="color:var(--muted)">—</div>
+            <div class="score-max">/100</div>
+          </div>
+        </div>
+        <div class="score-info">
+          <h3 id="scoreVerdict">集計中...</h3>
+          <p id="scoreDetail" style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.6"></p>
+        </div>
+      </div>
+
+      <!-- Threshold progress bar -->
+      <div class="threshold-bar-wrap">
+        <div class="threshold-bar">
+          <div class="threshold-fill below" id="thresholdFill" style="width:0%"></div>
+          <div class="threshold-line" style="left:70%"></div>
+        </div>
+        <div class="threshold-labels"><span>0</span><span>50</span><span>100</span></div>
+      </div>
+
+      <!-- Score breakdown -->
+      <div class="breakdown" id="breakdownRows"></div>
+
+      <!-- THE GATED CLAUDE BUTTON -->
+      <div class="claude-gate-zone locked" id="claudeGateZone">
+        <span class="lock-icon" id="lockIcon">🔒</span>
+        <p class="gate-cta-label" id="gateCTALabel">
+          Free Layer 分析が完了すると、スコアに応じて Claude が解除されます。
+        </p>
+        <button class="btn-claude locked" id="btnClaude" disabled onclick="runClaude()">
+          Claude でWebサイト生成
+        </button>
+        <div class="gate-threshold-note" id="thresholdNote">スコア70以上で解除</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="error-box" id="errorBox"></div>
+
+<!-- RESULTS -->
+<div id="results">
+  <div class="trend-card">
+    <div class="trend-header">
+      <div>
+        <div class="trend-keyword" id="resKeyword"></div>
+        <div style="color:var(--muted);font-size:11px;margin-top:4px;">Google トレンド分析（日本・過去12ヶ月）</div>
+      </div>
+      <div class="trend-badge" id="resTrend"></div>
+    </div>
+    <div class="trend-stats">
+      <div class="stat-box"><div class="stat-val" id="statScore">—</div><div class="stat-lbl">現在スコア</div></div>
+      <div class="stat-box"><div class="stat-val" id="statAvg">—</div><div class="stat-lbl">年間平均</div></div>
+      <div class="stat-box"><div class="stat-val" id="statRecent">—</div><div class="stat-lbl">直近4週平均</div></div>
+    </div>
+    <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
+  </div>
+
+  <div class="data-sources-row" id="dataSourcesRow" style="display:none">
+    <div class="data-source-card rakuten">
+      <div class="ds-header"><div class="ds-title">🛒 楽天市場</div><span class="ds-live-badge" id="rakutenBadge">—</span></div>
+      <div class="ds-metrics">
+        <div class="ds-metric"><div class="ds-metric-val" id="rakutenItemCount">—</div><div class="ds-metric-lbl">商品数</div></div>
+        <div class="ds-metric"><div class="ds-metric-val" id="rakutenDemand">—</div><div class="ds-metric-lbl">需要</div></div>
+        <div class="ds-metric"><div class="ds-metric-val" id="rakutenAvgPrice">—</div><div class="ds-metric-lbl">平均価格</div></div>
+        <div class="ds-metric"><div class="ds-metric-val" id="rakutenReviews">—</div><div class="ds-metric-lbl">総レビュー</div></div>
+      </div>
+    </div>
+    <div class="data-source-card youtube">
+      <div class="ds-header"><div class="ds-title">▶️ YouTube Japan</div><span class="ds-live-badge" id="youtubeBadge">—</span></div>
+      <div class="ds-metrics">
+        <div class="ds-metric"><div class="ds-metric-val" id="youtubeResults">—</div><div class="ds-metric-lbl">動画数</div></div>
+        <div class="ds-metric"><div class="ds-metric-val" id="youtubeAvgViews">—</div><div class="ds-metric-lbl">平均再生</div></div>
+      </div>
+    </div>
+    <div class="data-source-card yahoo-shop">
+      <div class="ds-header"><div class="ds-title">🛍️ Yahoo! ショッピング</div><span class="ds-live-badge" id="yahooBadge">—</span></div>
+      <div class="ds-metrics">
+        <div class="ds-metric"><div class="ds-metric-val" id="yahooHits">—</div><div class="ds-metric-lbl">出品数</div></div>
+        <div class="ds-metric"><div class="ds-metric-val" id="yahooAvgPrice">—</div><div class="ds-metric-lbl">平均価格</div></div>
+      </div>
+    </div>
+    <div class="data-source-card estat">
+      <div class="ds-header"><div class="ds-title">📊 e-Stat 統計</div><span class="ds-live-badge" id="estatBadge">—</span></div>
+      <div class="ds-metrics">
+        <div class="ds-metric"><div class="ds-metric-val" id="estatCount">—</div><div class="ds-metric-lbl">関連系列</div></div>
+        <div class="ds-metric"><div class="ds-metric-val" id="estatUnit">—</div><div class="ds-metric-lbl">単位</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="output-grid">
+    <div class="card">
+      <div class="card-header"><span class="card-icon">📋</span><span class="card-title">AIビジネスプラン <span style="font-size:9px;font-family:monospace;color:var(--muted);">via Groq (¥0)</span></span></div>
+      <div class="card-body" id="planBody"><div style="color:var(--muted);font-size:12px;">生成中...</div></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-icon">🌐</span><span class="card-title">Webサイト プレビュー</span></div>
+      <div class="site-preview-toolbar">
+        <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+        <div class="site-preview-url" id="siteUrl">—</div>
+        <div class="generated-by-badge groq" id="generatedByBadge">Groq</div>
+      </div>
+      <div class="preview-frame-wrap"><iframe id="siteFrame" sandbox="allow-scripts allow-same-origin"></iframe></div>
+      <button class="btn-dl" id="btnDownload" onclick="downloadSite()" style="display:none;">⬇️ HTMLをダウンロード</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:6px 18px;margin-bottom:12px">
+    <span style="display:flex;align-items:center;gap:5px;font-family:monospace;font-size:10px;color:rgba(255,255,255,.22)"><span style="width:4px;height:4px;border-radius:50%;background:#4ade80;flex-shrink:0;display:inline-block"></span>Google Trends</span>
+    <span style="display:flex;align-items:center;gap:5px;font-family:monospace;font-size:10px;color:rgba(255,255,255,.22)"><span style="width:4px;height:4px;border-radius:50%;background:#e6000d;flex-shrink:0;display:inline-block"></span>楽天市場 API</span>
+    <span style="display:flex;align-items:center;gap:5px;font-family:monospace;font-size:10px;color:rgba(255,255,255,.22)"><span style="width:4px;height:4px;border-radius:50%;background:#f00;flex-shrink:0;display:inline-block"></span>YouTube Data API</span>
+    <span style="display:flex;align-items:center;gap:5px;font-family:monospace;font-size:10px;color:rgba(255,255,255,.22)"><span style="width:4px;height:4px;border-radius:50%;background:#ff0033;flex-shrink:0;display:inline-block"></span>Yahoo! Shopping</span>
+    <span style="display:flex;align-items:center;gap:5px;font-family:monospace;font-size:10px;color:rgba(255,255,255,.22)"><span style="width:4px;height:4px;border-radius:50%;background:#a78bfa;flex-shrink:0;display:inline-block"></span>Gemini AI (BYOK)</span>
+    <span style="display:flex;align-items:center;gap:5px;font-family:monospace;font-size:10px;color:rgba(255,255,255,.22)"><span style="width:4px;height:4px;border-radius:50%;background:#00e5a0;flex-shrink:0;display:inline-block"></span>Claude Haiku</span>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;font-family:monospace;font-size:11px;color:rgba(255,255,255,.16)">
+    <span>SSI-AI Corporate</span>
+    <span style="color:rgba(255,255,255,.1)">|</span>
+    <span>© 2026</span>
+    <span style="color:rgba(255,255,255,.1)">|</span>
+    <a class="sudu-sig" href="#" title="Designed &amp; built by sudu">sudu</a>
+  </div>
+</footer>
+
+<script>
+// ─── AES-256-GCM VAULT (BYOK for Gemini) ─────────────────────────────────
+const NS = 'ssi_byok_';
+let _vaultKey = null;
+const _enc = new TextEncoder(), _dec = new TextDecoder();
+const h2a = h => new Uint8Array(h.match(/.{2}/g).map(b => parseInt(b,16)));
+const a2h = a => Array.from(a).map(b => b.toString(16).padStart(2,'0')).join('');
+
+async function deriveVaultKey(pwd, saltHex) {
+  const km = await crypto.subtle.importKey('raw', _enc.encode(pwd), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name:'PBKDF2', salt:h2a(saltHex), iterations:200_000, hash:'SHA-256' }, km, { name:'AES-GCM', length:256 }, false, ['encrypt','decrypt']);
+}
+async function encrypt(plain, key) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({name:'AES-GCM',iv}, key, _enc.encode(plain));
+  return a2h(iv) + ':' + a2h(new Uint8Array(ct));
+}
+async function decrypt(stored, key) {
+  const [ivH, ctH] = stored.split(':');
+  const pt = await crypto.subtle.decrypt({name:'AES-GCM',iv:h2a(ivH)}, key, h2a(ctH));
+  return _dec.decode(pt);
+}
+function deviceSalt() {
+  let s = localStorage.getItem(NS+'salt');
+  if (!s) { s = a2h(crypto.getRandomValues(new Uint8Array(16))); localStorage.setItem(NS+'salt',s); }
+  return s;
+}
+async function unlockVault() {
+  const pwd = document.getElementById('masterPwd').value;
+  const el = document.getElementById('unlockStatus');
+  if (!pwd) { setStatus(el,'err','パスワードを入力してください'); return; }
+  try {
+    _vaultKey = await deriveVaultKey(pwd, deviceSalt());
+    const test = localStorage.getItem(NS+'gemini');
+    if (test) await decrypt(test, _vaultKey);
+    setStatus(el,'ok','✓ Vault unlocked — keys decrypted');
+    await loadFieldsFromVault();
+    updateGear();
+  } catch {
+    _vaultKey = null;
+    setStatus(el,'err','Wrong password (or no keys saved yet — save a key first)');
+  }
+}
+async function saveEncrypted(svc, val) {
+  if (!_vaultKey) { alert('先にマスターパスワードを入力してUnlockしてください。'); return false; }
+  if (!val.trim()) { localStorage.removeItem(NS+svc); return true; }
+  localStorage.setItem(NS+svc, await encrypt(val.trim(), _vaultKey));
+  return true;
+}
+async function loadDecrypted(svc) {
+  if (!_vaultKey) return '';
+  const raw = localStorage.getItem(NS+svc);
+  if (!raw) return '';
+  try { return await decrypt(raw, _vaultKey); } catch { return ''; }
+}
+function hasStored(svc) { return Boolean(localStorage.getItem(NS+svc)); }
+
+// ─── SERVICES (BYOK — Gemini only; Claude is server-side corp key) ────────
+const SERVICES = [
+  { id:'gemini', name:'Gemini 1.5 Flash', sub:'Google AI Studio', icon:'◈', desc:'補助AI分析 · 無料で取得可能', docs:'https://aistudio.google.com/app/apikey', ph:'AIza••••••••••••••••••••••••••••' },
+];
+const fstate = {};
+
+function renderKeyFields() {
+  const c = document.getElementById('keyFields'); c.innerHTML = '';
+  SERVICES.forEach(svc => {
+    if (!fstate[svc.id]) fstate[svc.id] = { value:'', dirty:false };
+    const d = document.createElement('div'); d.className='key-card'; d.id='kc-'+svc.id;
+    d.innerHTML = `
+      <div class="key-card-head">
+        <div>
+          <div class="key-meta"><span style="font-size:13px;font-family:monospace;color:rgba(255,255,255,.3)">${svc.icon}</span><span class="key-name">${svc.name}</span><span class="key-sub">${svc.sub}</span></div>
+          <div class="key-desc">${svc.desc}</div>
+        </div>
+        <button class="key-docs" onclick="window.open('${svc.docs}','_blank')">Get key →</button>
+      </div>
+      <div class="key-input-row">
+        <input class="key-input" id="ki-${svc.id}" type="password" placeholder="${svc.ph}" autocomplete="off" spellcheck="false" oninput="onKInput('${svc.id}',this.value)">
+        <button class="btn-eye" onclick="toggleEye('${svc.id}')" title="表示/非表示">◎</button>
+      </div>
+      <div class="key-actions">
+        <button class="btn-test" id="kt-${svc.id}" onclick="testKey('${svc.id}')">▷ Test</button>
+        <button class="btn-save-k" id="ks-${svc.id}" onclick="saveKeyUI('${svc.id}')" style="display:none">⊕ Save</button>
+        <div class="k-status" id="kst-${svc.id}"></div>
+      </div>`;
+    c.appendChild(d);
+    if (hasStored(svc.id) && !_vaultKey) setKSt(svc.id,'saved','🔒 暗号化済み — Unlockして編集');
+  });
+  // Info note about Claude being server-side
+  const note = document.createElement('div');
+  note.style.cssText = 'border:1px solid rgba(0,229,160,.15);border-radius:10px;padding:10px 13px;font-size:11px;font-family:monospace;color:rgba(0,229,160,.5);line-height:1.7;margin-top:4px';
+  note.innerHTML = '🔒 <strong style="color:rgba(0,229,160,.8)">Claude Haiku</strong> は会社共通キー (<code>ANTHROPIC_CORP_KEY</code>) でサーバー側で実行されます。<br>ブラウザへのキー入力は不要です。';
+  c.appendChild(note);
+}
+
+function onKInput(id,val) { fstate[id].value=val; fstate[id].dirty=true; setKSt(id,'',''); document.getElementById('ks-'+id).style.display=val.trim()?'':'none'; }
+function toggleEye(id) { const i=document.getElementById('ki-'+id),b=i.nextElementSibling; i.type=i.type==='password'?'text':'password'; b.textContent=i.type==='password'?'◎':'◉'; }
+async function loadFieldsFromVault() {
+  for (const s of SERVICES) { const v=await loadDecrypted(s.id); const inp=document.getElementById('ki-'+s.id); if(inp&&v){inp.value=v;fstate[s.id].value=v;setKSt(s.id,'saved','✓ Vault から読み込み済み');} }
+}
+async function saveKeyUI(id) {
+  const val=fstate[id]?.value||document.getElementById('ki-'+id)?.value||'';
+  const ok2=await saveEncrypted(id,val);
+  if(ok2){fstate[id].dirty=false;document.getElementById('ks-'+id).style.display='none';setKSt(id,'saved','✓ 暗号化して保存');updateGear();updateNokeyBanner();}
+}
+async function clearAllKeysUI() {
+  if(!confirm('すべての暗号化キーを削除しますか？'))return;
+  SERVICES.forEach(s=>localStorage.removeItem(NS+s.id));localStorage.removeItem(NS+'salt');
+  _vaultKey=null;document.getElementById('masterPwd').value='';
+  renderKeyFields();updateGear();updateNokeyBanner();
+  setStatus(document.getElementById('unlockStatus'),'ok','全キーを削除しました');
+}
+function setKSt(id,type,msg) {
+  const el=document.getElementById('kst-'+id);if(!el)return;
+  if(!msg){el.innerHTML='';return;}
+  const dc={ok:'ok',err:'err',testing:'testing',saved:'saved'}[type]||'';
+  el.className='k-status'+(type?` s-${type}`:'');
+  el.innerHTML=dc?`<span class="ks ${dc}"></span>${msg}`:msg;
+}
+function setStatus(el,type,msg){el.className='unlock-status '+type;el.textContent=msg;}
+
+// ─── Key test ─────────────────────────────────────────────────────────────
+async function testKey(id) {
+  const val=(document.getElementById('ki-'+id)?.value||'').trim();
+  if(!val){setKSt(id,'err','キーを入力してください');return;}
+  document.getElementById('kt-'+id).disabled=true;
+  setKSt(id,'testing','Testing...');
+  let r;
+  try { if(id==='gemini') r=await pingGemini(val); } catch(e){r={ok:false,msg:e.message};}
+  setKSt(id,r.ok?'ok':'err',(r.ok?'✓ ':' ✗ ')+r.msg);
+  document.getElementById('kt-'+id).disabled=false;
+}
+async function pingGemini(key) {
+  const u=new URL('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent');
+  u.searchParams.set('key',key);
+  const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:'Hi'}]}]})});
+  const d=await r.json();
+  return r.ok?{ok:true,msg:'Gemini OK'}:{ok:false,msg:d?.error?.message||'HTTP '+r.status};
+}
+
+// ─── Modal helpers ────────────────────────────────────────────────────────
+function openSettings(tab='keys') {
+  document.getElementById('settingsModal').classList.add('open');
+  renderKeyFields(); refreshBudgetUI();
+  if(tab==='budget') { document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active')); document.getElementById('tab-budget').classList.add('active'); document.querySelector('[onclick*="budget"]').classList.add('active'); }
+}
+function closeSettings(){document.getElementById('settingsModal').classList.remove('open');}
+function switchTab(id,btn) { document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); document.getElementById('tab-'+id).classList.add('active'); if(btn)btn.classList.add('active'); }
+function updateGear(){document.getElementById('btnSettings').classList.toggle('has-keys',SERVICES.some(s=>hasStored(s.id)));}
+function updateNokeyBanner(){const b=document.getElementById('nokeyBanner'); if(b) b.classList.toggle('hidden',hasStored('gemini'));}
+document.getElementById('settingsModal').addEventListener('click',e=>{if(e.target===document.getElementById('settingsModal'))closeSettings();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSettings();});
+
+// ─── ¥3,000 Budget tracker (local soft-cap for Claude calls) ─────────────
+const BUDGET_CAP=3000, COST_PER_REQ=45, BUDGET_KEY=NS+'budget_v1';
+function getBudget() {
+  try { const raw=JSON.parse(localStorage.getItem(BUDGET_KEY)||'{}'); const month=new Date().toISOString().slice(0,7); if(raw.month!==month)return{month,spend:0,searches:0}; return raw; } catch{return{month:new Date().toISOString().slice(0,7),spend:0,searches:0};}
+}
+function saveBudget(b){localStorage.setItem(BUDGET_KEY,JSON.stringify(b));}
+function resetBudget() {
+  if(!confirm('月次予算をリセットしますか？'))return;
+  const b=getBudget();b.spend=0;b.searches=0;saveBudget(b);refreshBudgetUI();
+}
+function refreshBudgetUI() {
+  const b=getBudget();
+  const pct=Math.min(100,Math.round((b.spend/BUDGET_CAP)*100));
+  const state=pct>=100?'danger':pct>=70?'warn':'ok';
+  const sa=document.getElementById('spendAmount'); if(sa){sa.textContent=`¥${b.spend}`;sa.className=`spend-amount ${state}`;}
+  const sl=document.getElementById('spendLabel'); if(sl)sl.innerHTML=`of ¥${BUDGET_CAP.toLocaleString()} monthly cap · <span id="spendPct">${pct}%</span> used`;
+  const sf=document.getElementById('spendFill'); if(sf){sf.style.width=pct+'%';sf.className=`spend-fill ${state}`;}
+  const ss2=document.getElementById('statSearches'); if(ss2)ss2.textContent=b.searches||0;
+  const sr2=document.getElementById('statRemaining'); if(sr2)sr2.textContent=`¥${Math.max(0,BUDGET_CAP-b.spend)}`;
+  const wb=document.getElementById('budgetWarnBox'); if(wb)wb.classList.toggle('visible',pct>=100);
+  refreshBudgetPill(b.spend, BUDGET_CAP);
+}
+
+// ─── State ─────────────────────────────────────────────────────────────────
+let chart = null;
+let genHTML = '';
+let currentData = null;  // cached Free Layer response
+let scoreRingChart = null;
+
+// ─── Budget UI ────────────────────────────────────────────────────────────
+function refreshBudgetPill(spend, cap) {
+  const pct = Math.min(100, Math.round((spend / cap) * 100));
+  const state = pct >= 100 ? 'danger' : pct >= 70 ? 'warn' : 'ok';
+  const pill = document.getElementById('headerBudgetPill');
+  pill.textContent = `¥${Math.round(spend)} / ¥${Math.round(cap / 1000)}k`;
+  pill.className = `budget-pill ${state}`;
+}
+
+// ─── Progress steps ───────────────────────────────────────────────────────
+function setStep(n) {
+  for (let i = 1; i <= 4; i++) {
+    const el = document.getElementById('s' + i);
+    if (i < n) { el.className = 'step-item done'; const sp = el.querySelector('.spinner'); if (sp) sp.remove(); el.querySelector('.step-icon').textContent = '✓'; }
+    else if (i === n) { el.className = 'step-item active'; if (!el.querySelector('.spinner')) { const sp = document.createElement('div'); sp.className = 'spinner'; el.prepend(sp); } }
+    else { el.className = 'step-item'; }
+  }
+}
+
+// ─── Validation Gate UI ───────────────────────────────────────────────────
+function renderValidationGate(validation, budgetStatus) {
+  document.getElementById('validationGate').style.display = 'block';
+  const { score, breakdown, unlocksPaidLayer, verdict, threshold } = validation;
+
+  // Score number + colour
+  const col = score >= threshold ? '#00e5a0' : score >= threshold * 0.6 ? '#f59e0b' : '#ef4444';
+  document.getElementById('scoreNum').textContent = score;
+  document.getElementById('scoreNum').style.color = col;
+  document.getElementById('gateScoreBadge').textContent = score + '/100';
+  document.getElementById('gateScoreBadge').style.color = col;
+  document.getElementById('scoreVerdict').textContent = unlocksPaidLayer ? '✅ Claude 解除' : '🔒 スコア不足';
+  document.getElementById('scoreDetail').textContent = verdict;
+
+  // Threshold fill bar
+  const fill = document.getElementById('thresholdFill');
+  fill.style.width = score + '%';
+  fill.className = 'threshold-fill ' + (score >= threshold ? 'above' : 'below');
+
+  // Donut ring
+  if (scoreRingChart) scoreRingChart.destroy();
+  const ctx = document.getElementById('scoreRingCanvas').getContext('2d');
+  scoreRingChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: { datasets: [{ data: [score, 100 - score], backgroundColor: [col, 'rgba(255,255,255,.05)'], borderWidth: 0, circumference: 360, rotation: -90 }] },
+    options: { cutout: '75%', plugins: { legend: { display: false }, tooltip: { enabled: false } }, animation: { duration: 800 } }
+  });
+
+  // Breakdown bars
+  const labels = { googleTrend: 'Google Trends', rakutenDemand: '楽天需要', youtubeVolume: 'YouTube', yahooShopping: 'Yahoo!' };
+  let html = '';
+  for (const [key, val] of Object.entries(breakdown)) {
+    const pct = Math.round((val.points / val.max) * 100);
+    html += `<div class="breakdown-row">
+      <div class="br-label">${labels[key] || key}</div>
+      <div class="br-track"><div class="br-fill" style="width:${pct}%"></div></div>
+      <div class="br-pts">${val.points}/${val.max}</div>
+    </div>`;
+  }
+  document.getElementById('breakdownRows').innerHTML = html;
+
+  // Claude button state
+  const zone = document.getElementById('claudeGateZone');
+  const btn = document.getElementById('btnClaude');
+  const lock = document.getElementById('lockIcon');
+  const label = document.getElementById('gateCTALabel');
+  const note = document.getElementById('thresholdNote');
+
+  const budgetCapped = budgetStatus && !budgetStatus.allowed;
+
+  if (budgetCapped) {
+    zone.className = 'claude-gate-zone budget-capped';
+    lock.textContent = '🚫';
+    label.textContent = `月額予算 ¥3,000 に達しました。来月までお待ちください。`;
+    btn.className = 'btn-claude budget-capped';
+    btn.textContent = 'Claude でWebサイト生成（予算上限）';
+    btn.disabled = true;
+    note.textContent = `残予算: ¥0 / ¥3,000`;
+  } else if (unlocksPaidLayer) {
+    zone.className = 'claude-gate-zone unlocked';
+    lock.textContent = '🚀';
+    label.innerHTML = `スコア <strong style="color:var(--accent)">${score}/100</strong> — Claude 生成が解除されました！`;
+    btn.className = 'btn-claude unlocked';
+    btn.textContent = 'Claude でWebサイト生成（会社負担 ~¥45）';
+    btn.disabled = false;
+    note.textContent = `残予算: ¥${budgetStatus?.remainingJpy ?? '—'} / ¥3,000`;
+  } else {
+    zone.className = 'claude-gate-zone locked';
+    lock.textContent = '🔒';
+    label.innerHTML = `スコア <strong style="color:#f87171">${score}/100</strong> — あと <strong style="color:var(--warn)">${threshold - score}点</strong>でClaudeが解除されます。Groqの無料プランでも閲覧できます。`;
+    btn.className = 'btn-claude locked';
+    btn.textContent = 'Claude でWebサイト生成（スコア不足）';
+    btn.disabled = true;
+    note.textContent = `必要スコア: ${threshold} / 現在: ${score}`;
+  }
+}
+
+// ─── Run Claude (Phase 3 call — only reachable if gate is open) ──────────
+async function runClaude() {
+  if (!currentData) return;
+  const btn = document.getElementById('btnClaude');
+  const zone = document.getElementById('claudeGateZone');
+  btn.className = 'btn-claude running';
+  btn.textContent = 'Claude 生成中... (Phase 3)';
+  btn.disabled = true;
+  zone.className = 'claude-gate-zone unlocked';
+  document.getElementById('lockIcon').textContent = '⏳';
+
+  try {
+    // Re-trigger analyze with claude=1 flag to force the Paid Layer
+    const kw = document.getElementById('keyword').value.trim();
+    const resp = await fetch(`/api/analyze?keyword=${encodeURIComponent(kw)}&force_claude=1`);
+    const data = await resp.json();
+    if (!resp.ok || data.error) throw new Error(data.error || 'Server error');
+
+    const site = data.result?.websiteHTML;
+    if (site) {
+      genHTML = site;
+      document.getElementById('siteFrame').srcdoc = site;
+      document.getElementById('siteUrl').textContent = `${kw.toLowerCase().replace(/\s+/, '-')}.jp`;
+      document.getElementById('btnDownload').style.display = 'block';
+      const badge = document.getElementById('generatedByBadge');
+      if (data.result?.generatedBy === 'claude-haiku') {
+        badge.textContent = 'Claude Haiku ✨';
+        badge.className = 'generated-by-badge claude';
+      }
+      if (data.budgetStatus) refreshBudgetPill(data.budgetStatus.totalSpendJpy ?? 0, 3000);
+    }
+
+    btn.textContent = '✓ Claude 生成完了';
+    btn.style.background = 'rgba(0,229,160,.15)';
+    btn.style.border = '1px solid rgba(0,229,160,.3)';
+    btn.style.color = 'var(--accent)';
+    document.getElementById('lockIcon').textContent = '✅';
+  } catch (e) {
+    btn.className = 'btn-claude budget-capped';
+    btn.textContent = '⚠ 生成失敗: ' + e.message;
+    document.getElementById('lockIcon').textContent = '⚠️';
+  }
+}
+
+// ─── Main Analyze (Phase 1 + 2) ──────────────────────────────────────────
+function fill(kw) { document.getElementById('keyword').value = kw; document.getElementById('keyword').focus(); }
+document.getElementById('keyword').addEventListener('keydown', e => { if (e.key === 'Enter') analyze(); });
+
+function showErr(msg) {
+  document.getElementById('progress').style.display = 'none';
+  document.getElementById('btnAnalyze').disabled = false;
+  const b = document.getElementById('errorBox'); b.textContent = '⚠️ ' + msg; b.style.display = 'block';
+}
+
+async function analyze() {
+  const kw = document.getElementById('keyword').value.trim();
+  if (!kw) { alert('キーワードを入力してください'); return; }
+
+  document.getElementById('btnAnalyze').disabled = true;
+  document.getElementById('progress').style.display = 'block';
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('validationGate').style.display = 'none';
+  document.getElementById('errorBox').style.display = 'none';
+  document.getElementById('dataSourcesRow').style.display = 'none';
+  document.getElementById('btnDownload').style.display = 'none';
+  document.getElementById('siteFrame').srcdoc = '';
+  genHTML = ''; setStep(1);
+  document.getElementById('progress').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  try {
+    setTimeout(() => setStep(2), 1800);
+    setTimeout(() => setStep(3), 3800);
+    setTimeout(() => setStep(4), 5500);
+
+    const resp = await fetch(`/api/analyze?keyword=${encodeURIComponent(kw)}`);
+    let data;
+    try {
+      data = await resp.json();
+    } catch {
+      showErr('サーバーから不正なレスポンスが返されました。Vercel のログを確認してください。');
+      return;
+    }
+    if (!resp.ok || data.error) { showErr(data.error || 'サーバーエラー'); return; }
+
+    currentData = data;
+    document.getElementById('progress').style.display = 'none';
+
+    // Render Free Layer results
+    renderTrend(data.trend, kw);
+    renderDS(data.rakuten, data.youtube, data.yahoo, data.estat);
+    renderPlan(data.result?.businessPlan);
+
+    // Render Groq fallback site immediately (free)
+    const site = data.result?.websiteHTML || '';
+    if (site) {
+      genHTML = site;
+      document.getElementById('siteFrame').srcdoc = site;
+      document.getElementById('siteUrl').textContent = `${kw.toLowerCase().replace(/\s+/, '-')}.jp`;
+      document.getElementById('btnDownload').style.display = 'block';
+      const badge = document.getElementById('generatedByBadge');
+      badge.textContent = data.result?.generatedBy === 'claude-haiku' ? 'Claude Haiku ✨' : 'Groq';
+      badge.className = 'generated-by-badge ' + (data.result?.generatedBy === 'claude-haiku' ? 'claude' : 'groq');
+    }
+
+    document.getElementById('results').style.display = 'block';
+
+    // Phase 2 gate
+    if (data.validation) {
+      renderValidationGate(data.validation, data.budgetStatus);
+      document.getElementById('validationGate').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    if (data.budgetStatus) refreshBudgetPill(data.budgetStatus.totalSpendJpy ?? 0, 3000);
+    document.getElementById('btnAnalyze').disabled = false;
+
+  } catch (e) {
+    showErr(e.message || 'ネットワークエラー');
+  }
+}
+
+// ─── Render helpers ───────────────────────────────────────────────────────
+function renderTrend(data, kw) {
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('resKeyword').textContent = data.keyword;
+  document.getElementById('resTrend').textContent = data.trend;
+  document.getElementById('statScore').textContent = data.score;
+  document.getElementById('statAvg').textContent = data.avg;
+  document.getElementById('statRecent').textContent = data.recentAvg;
+  const labels = data.values.map(d => d.date.slice(0, 6)), vals = data.values.map(d => d.value);
+  if (chart) chart.destroy();
+  chart = new Chart(document.getElementById('trendChart').getContext('2d'), {
+    type: 'line',
+    data: { labels, datasets: [{ data: vals, fill: true, tension: .4, borderColor: '#00e5a0', borderWidth: 2, backgroundColor: 'rgba(0,229,160,.07)', pointRadius: 0 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#6b7280', font: { size: 9 }, maxTicksLimit: 6 }, grid: { color: 'rgba(255,255,255,.04)' } }, y: { ticks: { color: '#6b7280', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,.04)' }, min: 0, max: 100 } } }
+  });
+}
+
+function renderDS(rakuten, youtube, yahoo, estat) {
+  document.getElementById('dataSourcesRow').style.display = 'grid';
+  const rb = document.getElementById('rakutenBadge');
+  if (rakuten && !rakuten.mock) {
+    rb.textContent = 'LIVE'; rb.className = 'ds-live-badge live';
+    const d = rakuten.demandSignal;
+    document.getElementById('rakutenItemCount').textContent = d.itemCount.toLocaleString();
+    document.getElementById('rakutenDemand').textContent = d.level;
+    document.getElementById('rakutenAvgPrice').textContent = '¥' + d.avgPrice.toLocaleString();
+    document.getElementById('rakutenReviews').textContent = d.totalReviews.toLocaleString();
+  } else { rb.textContent = 'MOCK'; rb.className = 'ds-live-badge mock'; }
+  const yb = document.getElementById('youtubeBadge');
+  if (youtube && !youtube.mock) {
+    yb.textContent = 'LIVE'; yb.className = 'ds-live-badge live';
+    document.getElementById('youtubeResults').textContent = (youtube.totalResults || 0).toLocaleString();
+    const avg = youtube.avgViews || 0;
+    document.getElementById('youtubeAvgViews').textContent = avg >= 10000 ? Math.round(avg / 10000) + '万' : avg.toLocaleString();
+  } else { yb.textContent = 'MOCK'; yb.className = 'ds-live-badge mock'; }
+  const ybadge = document.getElementById('yahooBadge');
+  if (yahoo && !yahoo.mock) {
+    ybadge.textContent = 'LIVE'; ybadge.className = 'ds-live-badge live';
+    document.getElementById('yahooHits').textContent = (yahoo.totalHits || 0).toLocaleString();
+    document.getElementById('yahooAvgPrice').textContent = yahoo.avgPrice ? '¥' + yahoo.avgPrice.toLocaleString() : '—';
+  } else { ybadge.textContent = 'MOCK'; ybadge.className = 'ds-live-badge mock'; }
+  const eb = document.getElementById('estatBadge');
+  if (estat && !estat.mock) {
+    eb.textContent = 'LIVE'; eb.className = 'ds-live-badge live';
+    document.getElementById('estatCount').textContent = estat.statsCount || 0;
+    document.getElementById('estatUnit').textContent = estat.seriesData?.unit || '—';
+  } else { eb.textContent = 'FREE API'; eb.className = 'ds-live-badge live'; }
+}
+
+function renderPlan(bp) {
+  if (!bp) return;
+  const s_ = (l, t) => t ? `<div class="plan-section"><div class="plan-section-label">${l}</div><p>${t}</p></div>` : '';
+  const ls = (l, it) => it?.length ? `<div class="plan-section"><div class="plan-section-label">${l}</div><ul>${it.map(i => `<li>${i}</li>`).join('')}</ul></div>` : '';
+  const ss = (l, kws) => kws?.length ? `<div class="plan-section"><div class="plan-section-label">${l}</div><div class="seo-tags">${kws.map(k => `<span class="seo-tag">${k}</span>`).join('')}</div></div>` : '';
+  document.getElementById('planBody').innerHTML = `
+    <div class="plan-title">${bp.title || ''}</div><div class="plan-tagline">"${bp.tagline || ''}"</div>
+    ${s_('🎯 チャンスの理由', bp.opportunity)}${s_('👥 ターゲット', bp.target)}
+    ${s_('💡 サービス概要', bp.service)}${ls('⚡ 差別化ポイント', bp.differentiation)}
+    ${s_('💰 収益モデル', bp.revenueModel)}${ls('🚀 アクションプラン', bp.actionPlan)}
+    ${ss('🔍 SEOキーワード', bp.seoKeywords)}${s_('⚠️ リスクと対策', bp.risk)}`;
+}
+
+function downloadSite() {
+  if (!genHTML) return;
+  const b = new Blob([genHTML], { type: 'text/html' });
+  const u = URL.createObjectURL(b);
+  const a = document.createElement('a'); a.href = u; a.download = 'SSI-AI-site.html'; a.click(); URL.revokeObjectURL(u);
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────
+updateGear();
+updateNokeyBanner();
+refreshBudgetUI();
+</script>
+</body>
+</html>
