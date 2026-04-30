@@ -620,29 +620,92 @@ footer{text-align:center;padding:24px 16px 32px;color:var(--sub);font-size:11px;
 
 <script>
 'use strict';
-/* ── MODAL (Budget only) ───────────────────────────── */
 
-/* ── MODAL (Budget only — no BYOK keys needed) ─────── */
-function openSettings(tab='budget'){
+<script>
+'use strict';
+/* ── AES VAULT ── */
+const NS='ssi_byok_';let _vk=null;
+const _te=new TextEncoder(),_td=new TextDecoder();
+const h2a=h=>new Uint8Array(h.match(/.{2}/g).map(b=>parseInt(b,16)));
+const a2h=a=>Array.from(a).map(b=>b.toString(16).padStart(2,'0')).join('');
+async function deriveKey(p,s){const k=await crypto.subtle.importKey('raw',_te.encode(p),'PBKDF2',false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt:h2a(s),iterations:200000,hash:'SHA-256'},k,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);}
+async function vEnc(p,k){const iv=crypto.getRandomValues(new Uint8Array(12));const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},k,_te.encode(p));return a2h(iv)+':'+a2h(new Uint8Array(ct));}
+async function vDec(s,k){const[ih,ch]=s.split(':');return _td.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:h2a(ih)},k,h2a(ch)));}
+function getSalt(){let s=localStorage.getItem(NS+'salt');if(!s){s=a2h(crypto.getRandomValues(new Uint8Array(16)));localStorage.setItem(NS+'salt',s);}return s;}
+async function unlockVault(){
+  const p=document.getElementById('masterPwd').value,el=document.getElementById('unlockStatus');
+  if(!p){setSt(el,'err','パスワードを入力');return;}
+  try{_vk=await deriveKey(p,getSalt());const t=localStorage.getItem(NS+'gemini');if(t)await vDec(t,_vk);setSt(el,'ok','✓ Unlocked');await loadFromVault();updateGear();}
+  catch{_vk=null;setSt(el,'err','Wrong password');}
+}
+async function saveEnc(svc,val){if(!_vk){alert('先にUnlockしてください');return false;}if(!val.trim()){localStorage.removeItem(NS+svc);return true;}localStorage.setItem(NS+svc,await vEnc(val.trim(),_vk));return true;}
+async function loadDec(svc){if(!_vk)return'';const r=localStorage.getItem(NS+svc);if(!r)return'';try{return await vDec(r,_vk);}catch{return'';}}
+const hasKey=s=>!!localStorage.getItem(NS+s);
+
+/* ── KEY SERVICES ── */
+const SVCS=[{id:'gemini',name:'Gemini 2.0 Flash',sub:'Google AI Studio',desc:'補助AI分析 · 無料',docs:'https://aistudio.google.com/app/apikey',ph:'AIza••••••••••••••••••••••••••••'}];
+const fst={};
+function renderKeys(){
+  const c=document.getElementById('keyFields');c.innerHTML='';
+  SVCS.forEach(s=>{
+    if(!fst[s.id])fst[s.id]={value:''};
+    const d=document.createElement('div');d.className='key-card';
+    d.innerHTML=`<div class="kc-head"><div><div class="kc-name">${s.name}<span class="kc-sub">${s.sub}</span></div><div class="kc-desc">${s.desc}</div></div><button class="kc-link" onclick="window.open('${s.docs}','_blank')">Get key →</button></div><div class="kc-row"><input class="kc-inp" id="ki-${s.id}" type="password" placeholder="${s.ph}" autocomplete="off" oninput="onKI('${s.id}',this.value)"><button class="btn-eye" onclick="toggleEye('${s.id}')">◎</button></div><div class="kc-actions"><button class="btn-test" id="kt-${s.id}" onclick="testK('${s.id}')">▷ Test</button><button class="btn-save-k" id="ks-${s.id}" onclick="saveK('${s.id}')" style="display:none">⊕ Save</button><div class="kst" id="kst-${s.id}"></div></div>`;
+    c.appendChild(d);
+    if(hasKey(s.id)&&!_vk)setKSt(s.id,'saved','🔒 暗号化済み');
+  });
+  const n=document.createElement('div');n.className='corp-note';
+  n.innerHTML='🔒 <strong>Claude Haiku</strong> は <code>ANTHROPIC_CORP_KEY</code>（Vercel環境変数）で実行。';
+  c.appendChild(n);
+}
+function onKI(id,v){fst[id].value=v;setKSt(id,'','');document.getElementById('ks-'+id).style.display=v.trim()?'':'none';}
+function toggleEye(id){const i=document.getElementById('ki-'+id),b=i.nextElementSibling;i.type=i.type==='password'?'text':'password';b.textContent=i.type==='password'?'◎':'◉';}
+async function loadFromVault(){for(const s of SVCS){const v=await loadDec(s.id);const i=document.getElementById('ki-'+s.id);if(i&&v){i.value=v;fst[s.id].value=v;setKSt(s.id,'saved','✓ 読み込み済み');}}}
+async function saveK(id){const v=fst[id]?.value||'';if(await saveEnc(id,v)){document.getElementById('ks-'+id).style.display='none';setKSt(id,'saved','✓ 保存');updateGear();updateBanner();}}
+async function clearAllKeysUI(){if(!confirm('全キーを削除？'))return;SVCS.forEach(s=>localStorage.removeItem(NS+s.id));localStorage.removeItem(NS+'salt');_vk=null;document.getElementById('masterPwd').value='';renderKeys();updateGear();updateBanner();}
+function setKSt(id,type,msg){const el=document.getElementById('kst-'+id);if(!el)return;if(!msg){el.innerHTML='';return;}const dc={ok:'ok',err:'err',testing:'testing',saved:'saved'}[type]||'';el.className='kst'+(type?' s-'+type:'');el.innerHTML=dc?`<span class="kd ${dc}"></span>${msg}`:msg;}
+function setSt(el,type,msg){el.className='unlock-st '+type;el.textContent=msg;}
+async function testK(id){
+  const v=(document.getElementById('ki-'+id)?.value||'').trim();
+  if(!v){setKSt(id,'err','キーを入力');return;}
+  document.getElementById('kt-'+id).disabled=true;setKSt(id,'testing','Testing…');
+  let r;try{r=await pingGemini(v);}catch(e){r={ok:false,msg:e.message};}
+  setKSt(id,r.ok?'ok':'err',(r.ok?'✓ ':' ✗ ')+r.msg);document.getElementById('kt-'+id).disabled=false;
+}
+async function pingGemini(key){
+  const u=new URL('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent');
+  u.searchParams.set('key',key);
+  const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:'Hi'}]}]})});
+  const d=await r.json();return r.ok?{ok:true,msg:'OK'}:{ok:false,msg:d?.error?.message||'HTTP '+r.status};
+}
+
+/* ── MODAL ── */
+function openSettings(tab='keys'){
   document.getElementById('settingsModal').classList.add('open');
-  refreshBudgetUI();
+  renderKeys();refreshBudgetUI();
+  if(tab==='budget'){
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+    document.getElementById('tab-budget').classList.add('active');
+    document.querySelector('.tab-btn:last-child').classList.add('active');
+  }
 }
 function closeSettings(){document.getElementById('settingsModal').classList.remove('open');}
 function switchTab(id,btn){document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.getElementById('tab-'+id).classList.add('active');if(btn)btn.classList.add('active');}
-function updateGear(){}
-function updateBanner(){document.getElementById('nokeyBanner').classList.add('hidden');}
+function updateGear(){const g=document.getElementById('btnGear');if(g)g.classList.toggle('has-keys',SVCS.some(s=>hasKey(s.id)));}
+function updateBanner(){const b=document.getElementById('nokeyBanner');if(b)b.classList.toggle('hidden',hasKey('gemini'));}
 document.getElementById('settingsModal').addEventListener('click',e=>{if(e.target===document.getElementById('settingsModal'))closeSettings();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSettings();});
 
-/* ── BUDGET ────────────────────────────────────────── */
+/* ── BUDGET ── */
 const BCAP=3000,BK=NS+'budget_v1';
 function getBudget(){try{const r=JSON.parse(localStorage.getItem(BK)||'{}');const m=new Date().toISOString().slice(0,7);if(r.month!==m)return{month:m,spend:0,searches:0};return r;}catch{return{month:new Date().toISOString().slice(0,7),spend:0,searches:0};}}
 function saveBudget(b){localStorage.setItem(BK,JSON.stringify(b));}
-function resetBudget(){if(!confirm('月次予算をリセット？'))return;const b=getBudget();b.spend=0;b.searches=0;saveBudget(b);refreshBudgetUI();}
+function resetBudget(){if(!confirm('リセット？'))return;const b=getBudget();b.spend=0;b.searches=0;saveBudget(b);refreshBudgetUI();}
 function refreshBudgetUI(){
   const b=getBudget(),pct=Math.min(100,Math.round(b.spend/BCAP*100)),st=pct>=100?'danger':pct>=70?'warn':'ok';
   const sa=document.getElementById('spendAmount');if(sa){sa.textContent='¥'+b.spend;sa.className='spend-amt '+st;}
-  const sl=document.getElementById('spendLabel');if(sl)sl.innerHTML=`of ¥3,000 cap · <span id="spendPct">${pct}%</span> used`;
+  const sl=document.getElementById('spendLabel');if(sl)sl.innerHTML='of ¥3,000 cap · <span>'+pct+'%</span> used';
   const sf=document.getElementById('spendFill');if(sf){sf.style.width=pct+'%';sf.className='spend-fill '+st;}
   const ss=document.getElementById('statSearches');if(ss)ss.textContent=b.searches||0;
   const sr=document.getElementById('statRemaining');if(sr)sr.textContent='¥'+Math.max(0,BCAP-b.spend);
@@ -651,31 +714,26 @@ function refreshBudgetUI(){
 }
 function refreshBPill(spend){
   const pct=Math.min(100,Math.round(spend/BCAP*100)),st=pct>=100?'danger':pct>=70?'warn':'ok';
-  const p=document.getElementById('headerBudgetPill');p.textContent='¥'+Math.round(spend)+' / ¥3k';p.className='bpill '+st;
+  const p=document.getElementById('headerBudgetPill');if(p){p.textContent='¥'+Math.round(spend)+' / ¥3k';p.className='bpill '+st;}
 }
 
-/* ── TICKER + LIVE SUGGESTIONS ─────────────────────── */
+/* ── TICKER ── */
 const SEED=[
   {kw:'AIツール',score:92,up:true},{kw:'副業',score:88,up:true},
   {kw:'ミールキット',score:78,up:true},{kw:'ペットフード',score:71,up:false},
   {kw:'プログラミングスクール',score:68,up:true},{kw:'ミニマリスト家具',score:64,up:true},
-  {kw:'断捨離グッズ',score:55,up:false},{kw:'ヨガマット',score:60,up:true},
+  {kw:'フリーランス',score:61,up:true},{kw:'サブスク',score:58,up:false},
 ];
 let liveItems=[...SEED];
 const gSess=()=>{try{return JSON.parse(sessionStorage.getItem('ssi_r')||'[]');}catch{return[];}};
 const sSess=a=>sessionStorage.setItem('ssi_r',JSON.stringify(a));
-
 function tickerAdd(kw){const r=gSess().filter(x=>x.kw!==kw);r.unshift({kw,score:null,isNew:true,src:'user'});sSess(r.slice(0,8));rebuildTicker();}
 function tickerScore(kw,score){const r=gSess();const i=r.findIndex(x=>x.kw===kw);if(i!==-1){r[i]={...r[i],score,isNew:false};sSess(r);rebuildTicker();}}
 function mkTI(item,rank){
-  const badge=item.src==='user'&&item.isNew
-    ?`<span class="ti-badge new">NEW</span>`
-    :item.src==='live'
-      ?`<span class="ti-badge live">JP</span>`
-      :`<span class="ti-badge rank">#${rank}</span>`;
-  const sc=item.score!=null?`<span class="ti-score">${item.score}</span>`:item.isNew?`<span style="font-size:9px;color:var(--g);opacity:.4">…</span>`:'';
-  const arr=item.up==null?'':item.up?`<span class="ti-arr up">▲</span>`:`<span class="ti-arr dn">▼</span>`;
-  return`<span class="ti">${badge}<span class="ti-kw">${item.kw}</span>${sc}${arr}</span><span class="ti-sep">·</span>`;
+  const badge=item.src==='user'&&item.isNew?'<span class="ti-badge new">NEW</span>':item.src==='live'?'<span class="ti-badge live">JP</span>':'<span class="ti-badge rank">#'+rank+'</span>';
+  const sc=item.score!=null?'<span class="ti-score">'+item.score+'</span>':item.isNew?'<span style="font-size:9px;color:var(--g);opacity:.4">…</span>':'';
+  const arr=item.up==null?'':item.up?'<span class="ti-arr up">▲</span>':'<span class="ti-arr dn">▼</span>';
+  return'<span class="ti">'+badge+'<span class="ti-kw">'+item.kw+'</span>'+sc+arr+'</span><span class="ti-sep">·</span>';
 }
 function rebuildTicker(){
   const user=gSess(),seen=new Set(),all=[];
@@ -684,65 +742,44 @@ function rebuildTicker(){
   const el=document.getElementById('tickerInner');
   if(el)el.innerHTML=html+html;
 }
-function updateSuggestions(keywords){
-  if(!keywords||!keywords.length)return;
-  // filter: words ≥2 chars, not just numbers
-  const top=keywords.filter(k=>k.word&&k.word.length>=2&&!/^\d+$/.test(k.word)).slice(0,5);
-  if(!top.length)return;
-  const el=document.getElementById('sugRow');
+function setSuggestions(items){
+  const el=document.getElementById('sugRow');if(!el)return;
   el.innerHTML='<span class="sug-lbl">今注目：</span>';
-  top.forEach((k,i)=>{
+  items.slice(0,5).forEach((k,i)=>{
     const btn=document.createElement('button');
-    btn.className='sug-btn live sug-pop';
-    btn.style.animationDelay=i*50+'ms';
-    btn.textContent=k.word;
-    btn.onclick=()=>fill(k.word);
+    btn.className='sug-btn live';
+    btn.style.animation='popIn .3s ease '+i*60+'ms both';
+    btn.textContent=k.keyword||k.kw;
+    btn.onclick=()=>fill(btn.textContent);
     el.appendChild(btn);
   });
 }
 async function loadLiveData(){
-  // Always show seed suggestions immediately, replace if live data comes in
-  rebuildTicker();
+  rebuildTicker(); // show seed immediately
   try{
     const r=await fetch('/api/trending');
+    if(!r.ok)throw new Error('HTTP '+r.status);
     const data=await r.json();
-    if(!r.ok)throw new Error(data.error||'HTTP '+r.status);
     const items=data.trending||[];
     if(!items.length)throw new Error('empty');
-    // Update ticker
     liveItems=items.map((k,i)=>({kw:k.keyword,score:k.score,up:i<items.length/2,src:data.source==='static'?'seed':'live'}));
     rebuildTicker();
-    // Update suggestion chips
-    const el=document.getElementById('sugRow');
-    el.innerHTML='<span class="sug-lbl">今注目：</span>';
-    items.slice(0,5).forEach((k,i)=>{
-      const btn=document.createElement('button');
-      btn.className='sug-btn live';
-      btn.style.animation='popIn .3s ease '+i*60+'ms both';
-      btn.textContent=k.keyword;
-      btn.onclick=()=>fill(k.keyword);
-      el.appendChild(btn);
-    });
-  }catch(e){
-    // keep seed data, at least ticker shows something
-    console.warn('trending fetch failed:',e.message);
-  }
+    setSuggestions(items);
+  }catch(e){console.warn('trending:',e.message);}
 }
 
-/* ── MAIN STATE ────────────────────────────────────── */
+/* ── CORE ── */
 let mainChart=null,ringChart=null,genHTML='',currentData=null;
 
-/* ── PROGRESS ──────────────────────────────────────── */
 function setStep(n){
   for(let i=1;i<=4;i++){
-    const el=document.getElementById('s'+i);
+    const el=document.getElementById('s'+i);if(!el)continue;
     if(i<n){el.className='step-item done';el.querySelector('.spinner')?.remove();el.querySelector('.step-icon').textContent='✓';}
     else if(i===n){el.className='step-item active';if(!el.querySelector('.spinner')){const sp=document.createElement('div');sp.className='spinner';el.prepend(sp);}}
     else el.className='step-item';
   }
 }
 
-/* ── GATE ──────────────────────────────────────────── */
 function renderGate(v,budget){
   document.getElementById('gate').style.display='block';
   const{score,breakdown,unlocksPaidLayer,verdict,threshold}=v;
@@ -759,53 +796,74 @@ function renderGate(v,budget){
   const lbls={googleTrend:'Google Trends',rakutenDemand:'楽天需要',youtubeVolume:'YouTube',yahooShopping:'Yahoo!'};
   document.getElementById('breakdownRows').innerHTML=Object.entries(breakdown).map(([k,val])=>{
     const pct=Math.round(val.points/val.max*100);
-    return`<div class="br-row"><div class="br-lbl">${lbls[k]||k}</div><div class="br-track"><div class="br-fill" style="width:${pct}%"></div></div><div class="br-pts">${val.points}/${val.max}</div></div>`;
+    return'<div class="br-row"><div class="br-lbl">'+(lbls[k]||k)+'</div><div class="br-track"><div class="br-fill" style="width:'+pct+'%"></div></div><div class="br-pts">'+val.points+'/'+val.max+'</div></div>';
   }).join('');
   const zone=document.getElementById('cgate'),btn=document.getElementById('btnClaude'),icon=document.getElementById('cgateIcon'),lbl=document.getElementById('cgateLbl'),note=document.getElementById('cgateNote'),capped=budget&&!budget.allowed;
-  if(capped){zone.className='cgate capped';icon.textContent='🚫';lbl.textContent='月額予算 ¥3,000 に達しました。';btn.className='btn-claude capped';btn.textContent='予算上限 — 停止中';btn.disabled=true;note.textContent='残予算: ¥0 / ¥3,000';}
-  else if(unlocksPaidLayer){zone.className='cgate unlocked';icon.textContent='🚀';lbl.innerHTML=`スコア <strong style="color:var(--g)">${score}/100</strong> — Claude が解除されました！`;btn.className='btn-claude unlocked';btn.textContent='Claude でWebサイト生成（~¥45）';btn.disabled=false;note.textContent='残予算: ¥'+(budget?.remainingJpy??'—')+' / ¥3,000';}
-  else{zone.className='cgate locked';icon.textContent='🔒';lbl.innerHTML=`スコア <strong style="color:#f87171">${score}/100</strong> — あと <strong style="color:#f59e0b">${threshold-score}点</strong> で解除`;btn.className='btn-claude locked';btn.textContent='Claude でWebサイト生成（スコア不足）';btn.disabled=true;note.textContent='必要: '+threshold+'点 / 現在: '+score+'点';}
+  if(capped){zone.className='cgate capped';icon.textContent='🚫';lbl.textContent='月額予算 ¥3,000 に達しました。';btn.className='btn-claude capped';btn.textContent='予算上限';btn.disabled=true;note.textContent='残予算: ¥0';}
+  else if(unlocksPaidLayer){zone.className='cgate unlocked';icon.textContent='🚀';lbl.innerHTML='スコア <strong style="color:var(--g)">'+score+'/100</strong> — Claude 解除！';btn.className='btn-claude unlocked';btn.textContent='Claude でWebサイト生成（~¥45）';btn.disabled=false;note.textContent='残予算: ¥'+(budget?.remainingJpy??'—')+' / ¥3,000';}
+  else{zone.className='cgate locked';icon.textContent='🔒';lbl.innerHTML='スコア <strong style="color:#f87171">'+score+'/100</strong> — あと <strong style="color:#f59e0b">'+(threshold-score)+'点</strong> で解除';btn.className='btn-claude locked';btn.textContent='スコア不足';btn.disabled=true;note.textContent='必要: '+threshold+' / 現在: '+score;}
 }
 
-/* ── RUN CLAUDE ────────────────────────────────────── */
 async function runClaude(){
   if(!currentData)return;
   const btn=document.getElementById('btnClaude'),zone=document.getElementById('cgate');
-  btn.className='btn-claude running';btn.textContent='Claude 生成中… (Phase 3)';btn.disabled=true;zone.className='cgate unlocked';document.getElementById('cgateIcon').textContent='⏳';
+  btn.className='btn-claude running';btn.textContent='Claude 生成中…';btn.disabled=true;
+  zone.className='cgate unlocked';document.getElementById('cgateIcon').textContent='⏳';
   try{
     const kw=document.getElementById('keyword').value.trim();
     const resp=await fetch('/api/analyze?keyword='+encodeURIComponent(kw)+'&force_claude=1');
-    let data;try{data=await resp.json();}catch{throw new Error('Invalid server response');}
+    let data;try{data=await resp.json();}catch{throw new Error('Invalid response');}
     if(!resp.ok||data.error)throw new Error(data.error||'Server error');
     const site=data.result?.websiteHTML;
-    if(site){genHTML=site;document.getElementById('siteFrame').srcdoc=site;const badge=document.getElementById('genBadge');if(data.result?.generatedBy==='claude-haiku'){badge.textContent='Claude Haiku ✨';badge.className='gen-badge claude';}if(data.budgetStatus)refreshBPill(data.budgetStatus.totalSpendJpy??0);}
-    btn.textContent='✓ 生成完了';btn.style.cssText='background:rgba(0,229,160,.12);border:1px solid rgba(0,229,160,.3);color:var(--g);width:100%;padding:13px;border-radius:10px;font-size:14px;font-weight:700;font-family:var(--ff);cursor:default';
+    if(site){
+      genHTML=site;document.getElementById('siteFrame').srcdoc=site;
+      const badge=document.getElementById('genBadge');
+      if(data.result?.generatedBy==='claude-haiku'){badge.textContent='Claude Haiku ✨';badge.className='gen-badge claude';}
+      if(data.budgetStatus)refreshBPill(data.budgetStatus.totalSpendJpy??0);
+    }
+    btn.textContent='✓ 完了';btn.style.cssText='background:rgba(0,229,160,.12);border:1px solid rgba(0,229,160,.3);color:var(--g);width:100%;padding:13px;border-radius:10px;font-size:14px;font-weight:700;font-family:var(--ff)';
     document.getElementById('cgateIcon').textContent='✅';
-  }catch(e){btn.className='btn-claude capped';btn.textContent='⚠ 失敗: '+e.message;document.getElementById('cgateIcon').textContent='⚠️';}
+  }catch(e){btn.className='btn-claude capped';btn.textContent='⚠ '+e.message;document.getElementById('cgateIcon').textContent='⚠️';}
 }
 
-/* ── ANALYZE ───────────────────────────────────────── */
 function fill(kw){document.getElementById('keyword').value=kw;document.getElementById('keyword').focus();}
 document.getElementById('keyword').addEventListener('keydown',e=>{if(e.key==='Enter')analyze();});
 function showErr(msg){document.getElementById('progress').style.display='none';document.getElementById('btnAnalyze').disabled=false;const b=document.getElementById('errorBox');b.textContent='⚠ '+msg;b.style.display='block';}
+
 async function analyze(){
-  const kw=document.getElementById('keyword').value.trim();if(!kw){alert('キーワードを入力してください');return;}
+  const kw=document.getElementById('keyword').value.trim();
+  if(!kw){alert('キーワードを入力してください');return;}
   tickerAdd(kw);
-  document.getElementById('btnAnalyze').disabled=true;document.getElementById('progress').style.display='block';
-  document.getElementById('results').style.display='none';document.getElementById('gate').style.display='none';
-  document.getElementById('errorBox').style.display='none';document.getElementById('dsGrid').style.display='none';
-  document.getElementById('btnDL').style.display='none';document.getElementById('siteFrame').srcdoc='';
-  genHTML='';setStep(1);document.getElementById('progress').scrollIntoView({behavior:'smooth',block:'start'});
+  document.getElementById('btnAnalyze').disabled=true;
+  document.getElementById('progress').style.display='block';
+  document.getElementById('results').style.display='none';
+  document.getElementById('gate').style.display='none';
+  document.getElementById('errorBox').style.display='none';
+  document.getElementById('dsGrid').style.display='none';
+  document.getElementById('btnDL').style.display='none';
+  document.getElementById('siteFrame').srcdoc='';
+  genHTML='';setStep(1);
+  document.getElementById('progress').scrollIntoView({behavior:'smooth',block:'start'});
   try{
     setTimeout(()=>setStep(2),1800);setTimeout(()=>setStep(3),3800);setTimeout(()=>setStep(4),5500);
     const resp=await fetch('/api/analyze?keyword='+encodeURIComponent(kw));
-    let data;try{data=await resp.json();}catch{showErr('サーバーから不正なレスポンスが返されました');return;}
+    let data;try{data=await resp.json();}catch{showErr('サーバーエラー — Vercelのログを確認してください');return;}
     if(!resp.ok||data.error){showErr(data.error||'サーバーエラー');return;}
-    currentData=data;document.getElementById('progress').style.display='none';
+    currentData=data;
+    document.getElementById('progress').style.display='none';
     tickerScore(kw,data.trend?.score);
-    renderTrend(data.trend,kw);renderDS(data.rakuten,data.youtube,data.yahoo,data.estat);renderPlan(data.result?.businessPlan);
+    renderTrend(data.trend,kw);
+    renderDS(data.rakuten,data.youtube,data.yahoo,data.estat);
+    renderPlan(data.result?.businessPlan);
     const site=data.result?.websiteHTML||'';
-    if(site){genHTML=site;document.getElementById('siteFrame').srcdoc=site;document.getElementById('siteUrl').textContent=kw.toLowerCase().replace(/\s+/,'-')+'.jp';document.getElementById('btnDL').style.display='block';const badge=document.getElementById('genBadge');badge.textContent=data.result?.generatedBy==='claude-haiku'?'Claude Haiku ✨':'Groq';badge.className='gen-badge '+(data.result?.generatedBy==='claude-haiku'?'claude':'groq');}
+    if(site){
+      genHTML=site;document.getElementById('siteFrame').srcdoc=site;
+      document.getElementById('siteUrl').textContent=kw.toLowerCase().replace(/\s+/,'-')+'.jp';
+      document.getElementById('btnDL').style.display='block';
+      const badge=document.getElementById('genBadge');
+      badge.textContent=data.result?.generatedBy==='claude-haiku'?'Claude Haiku ✨':'Groq';
+      badge.className='gen-badge '+(data.result?.generatedBy==='claude-haiku'?'claude':'groq');
+    }
     document.getElementById('results').style.display='block';
     if(data.validation){renderGate(data.validation,data.budgetStatus);document.getElementById('gate').scrollIntoView({behavior:'smooth',block:'start'});}
     if(data.budgetStatus)refreshBPill(data.budgetStatus.totalSpendJpy??0);
@@ -813,19 +871,21 @@ async function analyze(){
   }catch(e){showErr(e.message||'ネットワークエラー');}
 }
 
-/* ── RENDER ────────────────────────────────────────── */
-function renderTrend(data,kw){
+function renderTrend(data){
   document.getElementById('results').style.display='block';
-  document.getElementById('resKeyword').textContent=data.keyword;document.getElementById('resTrend').textContent=data.trend;
-  document.getElementById('statScore').textContent=data.score;document.getElementById('statAvg').textContent=data.avg;document.getElementById('statRecent').textContent=data.recentAvg;
+  document.getElementById('resKeyword').textContent=data.keyword;
+  document.getElementById('resTrend').textContent=data.trend;
+  document.getElementById('statScore').textContent=data.score;
+  document.getElementById('statAvg').textContent=data.avg;
+  document.getElementById('statRecent').textContent=data.recentAvg;
   if(mainChart)mainChart.destroy();
-  mainChart=new Chart(document.getElementById('trendChart').getContext('2d'),{type:'line',
-    data:{labels:data.values.map(d=>d.date.slice(0,6)),datasets:[{data:data.values.map(d=>d.value),fill:true,tension:.4,borderColor:'#00e5a0',borderWidth:2,backgroundColor:'rgba(0,229,160,.06)',pointRadius:0,pointHoverRadius:4,pointHoverBackgroundColor:'#00e5a0'}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#161b26',borderColor:'#00e5a0',borderWidth:1,titleFont:{family:"'Space Mono'"},bodyFont:{family:"'Space Mono'"}}},
-      scales:{x:{ticks:{color:'#4a5568',font:{size:9},maxTicksLimit:6},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#4a5568',font:{size:9}},grid:{color:'rgba(255,255,255,.04)'},min:0,max:100}}}
+  mainChart=new Chart(document.getElementById('trendChart').getContext('2d'),{
+    type:'line',
+    data:{labels:data.values.map(d=>d.date.slice(0,6)),datasets:[{data:data.values.map(d=>d.value),fill:true,tension:.4,borderColor:'#00e5a0',borderWidth:2,backgroundColor:'rgba(0,229,160,.06)',pointRadius:0}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#4a5568',font:{size:9},maxTicksLimit:6},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#4a5568',font:{size:9}},grid:{color:'rgba(255,255,255,.04)'},min:0,max:100}}}
   });
 }
-function setB(id,live){const el=document.getElementById(id);el.textContent=live?'LIVE':'MOCK';el.className='lbadge '+(live?'live':'mock');}
+function setB(id,live){const el=document.getElementById(id);if(!el)return;el.textContent=live?'LIVE':'MOCK';el.className='lbadge '+(live?'live':'mock');}
 function renderDS(r,yt,yh,es){
   document.getElementById('dsGrid').style.display='grid';
   setB('rBadge',r&&!r.mock);if(r&&!r.mock){const d=r.demandSignal;document.getElementById('rCount').textContent=d.itemCount.toLocaleString();document.getElementById('rDemand').textContent=d.level;document.getElementById('rPrice').textContent='¥'+d.avgPrice.toLocaleString();document.getElementById('rReviews').textContent=d.totalReviews.toLocaleString();}
@@ -835,15 +895,18 @@ function renderDS(r,yt,yh,es){
 }
 function renderPlan(bp){
   if(!bp)return;
-  const s_=(l,t)=>t?`<div class="plan-sec"><div class="plan-sec-lbl">${l}</div><p>${t}</p></div>`:'';
-  const ls=(l,it)=>it?.length?`<div class="plan-sec"><div class="plan-sec-lbl">${l}</div><ul>${it.map(i=>`<li>${i}</li>`).join('')}</ul></div>`:'';
-  const ss=(l,kws)=>kws?.length?`<div class="plan-sec"><div class="plan-sec-lbl">${l}</div><div class="seo-tags">${kws.map(k=>`<span class="seo-tag">${k}</span>`).join('')}</div></div>`:'';
-  document.getElementById('planBody').innerHTML=`<div class="plan-title">${bp.title||''}</div><div class="plan-tag">"${bp.tagline||''}"</div>`+s_('🎯 チャンスの理由',bp.opportunity)+s_('👥 ターゲット',bp.target)+s_('💡 サービス概要',bp.service)+ls('⚡ 差別化ポイント',bp.differentiation)+s_('💰 収益モデル',bp.revenueModel)+ls('🚀 アクションプラン',bp.actionPlan)+ss('🔍 SEO',bp.seoKeywords)+s_('⚠️ リスク',bp.risk);
+  const s_=(l,t)=>t?'<div class="plan-sec"><div class="plan-sec-lbl">'+l+'</div><p>'+t+'</p></div>':'';
+  const ls=(l,it)=>it?.length?'<div class="plan-sec"><div class="plan-sec-lbl">'+l+'</div><ul>'+it.map(i=>'<li>'+i+'</li>').join('')+'</ul></div>':'';
+  const ss=(l,kws)=>kws?.length?'<div class="plan-sec"><div class="plan-sec-lbl">'+l+'</div><div class="seo-tags">'+kws.map(k=>'<span class="seo-tag">'+k+'</span>').join('')+'</div></div>':'';
+  document.getElementById('planBody').innerHTML='<div class="plan-title">'+(bp.title||'')+'</div><div class="plan-tag">"'+(bp.tagline||'')+'"</div>'+s_('🎯 チャンス',bp.opportunity)+s_('👥 ターゲット',bp.target)+s_('💡 サービス',bp.service)+ls('⚡ 差別化',bp.differentiation)+s_('💰 収益',bp.revenueModel)+ls('🚀 アクション',bp.actionPlan)+ss('🔍 SEO',bp.seoKeywords)+s_('⚠️ リスク',bp.risk);
 }
 function downloadSite(){if(!genHTML)return;const b=new Blob([genHTML],{type:'text/html'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='SSI-AI-site.html';a.click();URL.revokeObjectURL(u);}
 
-/* ── INIT ──────────────────────────────────────────── */
-updateGear();updateBanner();refreshBudgetUI();rebuildTicker();loadLiveData();
+/* ── INIT ── */
+updateGear();
+updateBanner();
+refreshBudgetUI();
+loadLiveData();
 </script>
 </body>
 </html>
