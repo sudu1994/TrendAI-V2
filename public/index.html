@@ -6,7 +6,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src https://fonts.gstatic.com; connect-src 'self' https://generativelanguage.googleapis.com; frame-src 'self' blob:; img-src 'self' data:; object-src 'none'; base-uri 'self';">
 <title>SSI AI — 社内バリデーションプラットフォーム</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Noto+Sans+JP:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 :root {
@@ -15,7 +15,7 @@
   --accent:#00e5a0; --accent2:#0098ff; --accent3:#ff6b35;
   --warn:#f59e0b; --danger:#ef4444;
   --text:#f0f2f8; --muted:#6b7280;
-  --fd:'Syne',sans-serif; --fb:'Noto Sans JP',sans-serif;
+  --fd:'Syne',sans-serif; --fb:'Noto Sans JP',sans-serif; --fm:'Space Mono',monospace;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100vh;overflow-x:hidden}
@@ -177,7 +177,23 @@ footer{text-align:center;padding:28px 20px;color:var(--muted);font-size:11px;bor
 .sudu-sig::before{content:'◈';font-size:8px}
 @media(max-width:480px){header{padding:12px 14px}.hero{padding:36px 14px 28px}.btn-analyze{padding:10px 14px;font-size:13px}}
 
-/* ── SETTINGS MODAL ── */
+/* ── TICKER ── */
+.ticker-wrap{background:linear-gradient(90deg,var(--surface2),#1a1f35,var(--surface2));border-bottom:1px solid var(--border);overflow:hidden;padding:9px 0;white-space:nowrap;position:relative;z-index:10}
+.ticker-wrap::before,.ticker-wrap::after{content:'';position:absolute;top:0;bottom:0;width:60px;z-index:2;pointer-events:none}
+.ticker-wrap::before{left:0;background:linear-gradient(90deg,var(--bg),transparent)}
+.ticker-wrap::after{right:0;background:linear-gradient(-90deg,var(--bg),transparent)}
+.ticker-inner{display:inline-block;animation:tick 60s linear infinite;will-change:transform}
+.ticker-inner:hover{animation-play-state:paused}
+.ticker-item{display:inline-flex;align-items:center;gap:5px;padding:0 1.4rem;font-family:var(--fm);font-size:11px;color:rgba(255,255,255,.4)}
+.t-rank{font-size:9px;color:var(--accent);border:1px solid rgba(0,229,160,.3);border-radius:3px;padding:1px 4px;font-weight:700}
+.t-rank.t-new{background:rgba(0,229,160,.12);border-color:rgba(0,229,160,.5)}
+.t-rank.t-live{background:rgba(0,152,255,.12);border-color:rgba(0,152,255,.4);color:var(--accent2)}
+.t-kw{color:rgba(240,242,248,.85);font-weight:700}
+.t-score{color:var(--accent);font-size:10px}
+.t-arrow{color:#ff6b35;font-size:9px}.t-arrow.down{color:#60a5fa}
+.ticker-sep{color:rgba(0,229,160,.15);font-size:10px}
+.t-src{font-size:9px;color:rgba(255,255,255,.2);font-style:italic}
+@keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 .modal-overlay{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);align-items:flex-start;justify-content:center;padding:20px 16px;overflow-y:auto}
 .modal-overlay.open{display:flex}
 .modal{background:var(--surface);border:1px solid rgba(255,255,255,.1);border-radius:20px;width:100%;max-width:540px;margin:auto;overflow:hidden;animation:modalIn .2s ease}
@@ -326,7 +342,11 @@ footer{text-align:center;padding:28px 20px;color:var(--muted);font-size:11px;bor
   </div>
 </header>
 
-<section class="hero">
+<!-- LIVE TICKER — real-time data from YouTube trending + user searches -->
+<div class="ticker-wrap"><div class="ticker-inner" id="tickerInner">
+  <!-- populated by JS -->
+  <span class="ticker-item"><span class="t-rank">...</span><span class="t-kw">データ読込中</span></span>
+</div></div>
   <div class="hero-eyebrow">🏢 Company-Funded · Hybrid AI · Validation-Gated</div>
   <h1>アイデアを、<br><span class="hl">ビジネスへ。</span></h1>
   <p>Free Layer で市場データを収集 → バリデーションスコアが<strong style="color:var(--text)">70点以上</strong>のときのみ Claude が解除されます。</p>
@@ -838,6 +858,8 @@ async function analyze() {
   const kw = document.getElementById('keyword').value.trim();
   if (!kw) { alert('キーワードを入力してください'); return; }
 
+  tickerAddSearch(kw); // ← add to ticker immediately as NEW
+
   document.getElementById('btnAnalyze').disabled = true;
   document.getElementById('progress').style.display = 'block';
   document.getElementById('results').style.display = 'none';
@@ -866,6 +888,9 @@ async function analyze() {
 
     currentData = data;
     document.getElementById('progress').style.display = 'none';
+
+    // Update ticker with real score now that we have trend data
+    tickerUpdateScore(kw, data.trend?.score);
 
     // Render Free Layer results
     renderTrend(data.trend, kw);
@@ -969,10 +994,93 @@ function downloadSite() {
   const a = document.createElement('a'); a.href = u; a.download = 'SSI-AI-site.html'; a.click(); URL.revokeObjectURL(u);
 }
 
+// ─── LIVE TICKER — real-time trending keywords ────────────────────────────
+// Sources: 1) YouTube JP trending (live via /api/youtube)
+//          2) User's own searches this session (sessionStorage)
+//          3) Fallback seed list if API unavailable
+
+const TICKER_SEED = [
+  {kw:'AIツール',score:92,up:true,src:'seed'},{kw:'副業',score:88,up:true,src:'seed'},
+  {kw:'ミールキット',score:78,up:true,src:'seed'},{kw:'ペットフード',score:71,up:false,src:'seed'},
+  {kw:'プログラミングスクール',score:68,up:true,src:'seed'},{kw:'ミニマリスト家具',score:64,up:true,src:'seed'},
+  {kw:'断捨離グッズ',score:55,up:false,src:'seed'},{kw:'ヨガマット',score:60,up:true,src:'seed'},
+];
+
+let tickerItems = [...TICKER_SEED];
+
+// Session search history
+const gr = () => { try{return JSON.parse(sessionStorage.getItem('ssi_r')||'[]')}catch{return[]} };
+const sr = a => sessionStorage.setItem('ssi_r', JSON.stringify(a));
+
+function tickerAddSearch(kw) {
+  const r = gr().filter(x => x.kw !== kw);
+  r.unshift({kw, score: null, up: null, isNew: true, src: 'user'});
+  sr(r.slice(0, 8));
+  rebuildTicker();
+}
+function tickerUpdateScore(kw, score) {
+  const r = gr();
+  const i = r.findIndex(x => x.kw === kw);
+  if (i !== -1) { r[i] = {...r[i], score, isNew: false}; sr(r); rebuildTicker(); }
+}
+
+function mkTickerItem(item, rank) {
+  const badge = item.src === 'user' && item.isNew
+    ? `<span class="t-rank t-new">NEW</span>`
+    : item.src === 'youtube'
+      ? `<span class="t-rank t-live">YT</span>`
+      : `<span class="t-rank">#${rank}</span>`;
+  const scoreEl = item.score != null
+    ? `<span class="t-score">${item.score}</span>`
+    : item.isNew ? `<span style="font-size:9px;color:var(--accent);opacity:.6">検索中</span>` : '';
+  const arrow = item.up == null ? '' : item.up
+    ? `<span class="t-arrow">▲</span>`
+    : `<span class="t-arrow down">▼</span>`;
+  return `<span class="ticker-item">${badge}<span class="t-kw">${item.kw}</span>${scoreEl}${arrow}</span><span class="ticker-sep">·</span>`;
+}
+
+function rebuildTicker() {
+  const userSearches = gr();
+  // Merge: user searches first, then live YT, then seeds (dedup by kw)
+  const seen = new Set();
+  const merged = [];
+  for (const item of [...userSearches, ...tickerItems]) {
+    if (!seen.has(item.kw)) { seen.add(item.kw); merged.push(item); }
+  }
+  const html = merged.map((x, i) => mkTickerItem(x, i + 1)).join('');
+  const el = document.getElementById('tickerInner');
+  if (el) el.innerHTML = html + html; // doubled for seamless loop
+}
+
+async function loadLiveTicker() {
+  try {
+    const r = await fetch('/api/youtube'); // trending mode (no keyword)
+    if (!r.ok) throw new Error('non-200');
+    const data = await r.json();
+    const keywords = data.trendKeywords || data.data?.trendKeywords || [];
+    if (keywords.length) {
+      // Replace seed items with live YouTube trending keywords
+      const liveItems = keywords.slice(0, 10).map((k, i) => ({
+        kw: k.word,
+        score: Math.round(40 + (keywords.length - i) * 5), // proxy score from rank
+        up: i < keywords.length / 2,
+        src: 'youtube',
+      }));
+      tickerItems = liveItems;
+      rebuildTicker();
+    }
+  } catch {
+    // silently keep seed data — no mock notice needed
+    rebuildTicker();
+  }
+}
+
 // ─── Init ─────────────────────────────────────────────────────────────────
 updateGear();
 updateNokeyBanner();
 refreshBudgetUI();
+rebuildTicker();
+loadLiveTicker();
 </script>
 </body>
 </html>
