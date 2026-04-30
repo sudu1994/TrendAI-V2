@@ -1,29 +1,24 @@
 /**
- * validator.js — Phase 2 Gatekeeper
- * Computes a 0–100 validation score from Free Layer data.
- * Claude (Paid Layer) is only unlocked if score >= THRESHOLD.
+ * validator.js — Phase 2 Gatekeeper (FIXED v2.1)
  *
- * Score pipeline:
- *   Keyword → Trend/Demand → Base Score → e-Stat Boost (60–75 range) → Final Score → Gate
+ * FIXES:
+ *   - Empty Rakuten/YouTube → penalised (reduced points)
+ *   - Yahoo strong signal → keeps score stable even if others are empty
+ *   - e-Stat live data → score boost applied
+ *   - status:'empty' and status:'error' treated as low-signal, not zero
  */
 
 const THRESHOLD = 70;
 
 /**
  * computeValidationScore
+ *
  * Weights:
  *   Google Trend recent score  → 35 pts
- *   Rakuten demand level       → 30 pts
- *   YouTube content volume     → 20 pts
- *   Yahoo! Shopping volume     → 15 pts
+ *   Rakuten demand level       → 30 pts  (penalised if status=empty/error)
+ *   YouTube content volume     → 20 pts  (penalised if status=empty/error)
+ *   Yahoo! Shopping volume     → 15 pts  (stable even if others empty)
  *   e-Stat boost               → up to +15 pts (only when base score 60–75)
- *
- * @param {object} trend
- * @param {object} rakuten
- * @param {object} youtube
- * @param {object} yahoo
- * @param {object|null} estat  — result from fetchEstatBoost(), or null to skip
- * @returns {{ score, breakdown, unlocksPaidLayer, estat }}
  */
 function computeValidationScore(trend, rakuten, youtube, yahoo, estat = null) {
   let score = 0;
@@ -34,46 +29,77 @@ function computeValidationScore(trend, rakuten, youtube, yahoo, estat = null) {
   score += trendScore;
   breakdown.googleTrend = { raw: trend?.recentAvg ?? 0, points: trendScore, max: 35 };
 
-  // ── Rakuten Demand (30 pts) ─────────────────────────────────────
-  const demandMap = { '非常に高い': 30, '高い': 24, '中程度': 15, '低い': 6, 'Unknown': 0 };
-  const rakutenPts = demandMap[rakuten?.demandSignal?.level] ?? 0;
+  // ── Rakuten Demand (30 pts) — penalise empty/error ──────────────
+  let rakutenPts;
+  const rakutenStatus = rakuten?.status ?? 'ok';
+  if (rakutenStatus === 'empty') {
+    // Empty results: not an API error, but low signal — give minimum points
+    rakutenPts = 3;
+    breakdown.rakutenDemand = {
+      raw: 'empty', points: rakutenPts, max: 30,
+      note: 'Empty results — penalised. Consider keyword adjustment.',
+    };
+  } else if (rakutenStatus === 'error') {
+    rakutenPts = 0;
+    breakdown.rakutenDemand = { raw: 'error', points: 0, max: 30, note: 'API error — 0 pts' };
+  } else {
+    const demandMap = { '非常に高い': 30, '高い': 24, '中程度': 15, '低い': 6, 'Unknown': 0 };
+    rakutenPts = demandMap[rakuten?.demandSignal?.level] ?? 0;
+    breakdown.rakutenDemand = { raw: rakuten?.demandSignal?.level ?? 'Unknown', points: rakutenPts, max: 30 };
+  }
   score += rakutenPts;
-  breakdown.rakutenDemand = { raw: rakuten?.demandSignal?.level ?? 'Unknown', points: rakutenPts, max: 30 };
 
-  // ── YouTube Volume (20 pts) ─────────────────────────────────────
-  const ytResults = youtube?.totalResults ?? 0;
-  const ytPts = ytResults > 50000 ? 20 : ytResults > 10000 ? 15 : ytResults > 1000 ? 8 : 2;
+  // ── YouTube Volume (20 pts) — penalise empty/error ──────────────
+  let ytPts;
+  const youtubeStatus = youtube?.status ?? 'ok';
+  if (youtubeStatus === 'empty') {
+    ytPts = 2;
+    breakdown.youtubeVolume = {
+      raw: 'empty', points: ytPts, max: 20,
+      note: 'Empty results — penalised. Try broader keyword.',
+    };
+  } else if (youtubeStatus === 'error') {
+    ytPts = 0;
+    breakdown.youtubeVolume = { raw: 'error', points: 0, max: 20, note: 'API error — 0 pts' };
+  } else {
+    const ytResults = youtube?.totalResults ?? 0;
+    ytPts = ytResults > 50000 ? 20 : ytResults > 10000 ? 15 : ytResults > 1000 ? 8 : 2;
+    breakdown.youtubeVolume = { raw: ytResults, points: ytPts, max: 20 };
+  }
   score += ytPts;
-  breakdown.youtubeVolume = { raw: ytResults, points: ytPts, max: 20 };
 
-  // ── Yahoo! Shopping Volume (15 pts) ────────────────────────────
+  // ── Yahoo! Shopping Volume (15 pts) — keeps score stable ────────
+  // Yahoo is working correctly — full weight maintained
   const yhHits = yahoo?.totalHits ?? 0;
-  const yhPts = yhHits > 10000 ? 15 : yhHits > 3000 ? 11 : yhHits > 500 ? 6 : 2;
+  const yhPts  = yhHits > 10000 ? 15 : yhHits > 3000 ? 11 : yhHits > 500 ? 6 : 2;
   score += yhPts;
   breakdown.yahooShopping = { raw: yhHits, points: yhPts, max: 15 };
 
   const baseScore = Math.min(100, score);
   breakdown.baseScore = baseScore;
 
-  // ── e-Stat Boost (only when base score is 60–75) ────────────────
+  // ── e-Stat Boost (only when base score is 60–75) ─────────────────
   let estatResult = { marketSize: 0, boost: 0, source: 'skipped', error: null };
-  if (estat && baseScore >= 60 && baseScore <= 75) {
+  if (estat && estat.source === 'live' && baseScore >= 60 && baseScore <= 75) {
     const boost = estat.boost ?? 0;
     estatResult = {
       marketSize: estat.marketSize ?? 0,
       boost,
       category:   estat.category ?? 'general',
-      source:     estat.source ?? 'mock',
-      error:      estat.error  ?? null,
+      source:     estat.source,
+      error:      estat.error ?? null,
     };
     score = Math.min(100, baseScore + boost);
     breakdown.estatBoost = { marketSize: estatResult.marketSize, boost, appliedRange: '60–75' };
-  } else if (estat === null || baseScore < 60 || baseScore > 75) {
+  } else {
     score = baseScore;
-    breakdown.estatBoost = {
-      skipped: true,
-      reason: estat === null ? 'e-Stat not called' : `base score ${baseScore} outside 60–75 range`,
-    };
+    let skipReason;
+    if (!estat)                           skipReason = 'e-Stat not called';
+    else if (estat.source === 'error')    skipReason = `e-Stat returned error: ${estat.error}`;
+    else if (baseScore < 60)              skipReason = `base score ${baseScore} below 60`;
+    else if (baseScore > 75)              skipReason = `base score ${baseScore} above 75`;
+    else                                  skipReason = 'unknown';
+    breakdown.estatBoost = { skipped: true, reason: skipReason };
   }
 
   const finalScore = Math.min(100, score);

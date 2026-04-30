@@ -1,33 +1,31 @@
 /**
- * lib/estat.js — e-Stat (Japan Government Statistics) Integration
+ * lib/estat.js — e-Stat (Japan Government Statistics) Integration (FIXED v2.1)
  *
- * Free layer data source. Called conditionally when base score is 60–75.
- * Dataset IDs are fixed — no dynamic discovery needed.
- *
- * Docs: https://api.e-stat.go.jp/
+ * FIXES:
+ *   - Hard env check: throws if ESTAT_APP_ID missing (no silent mock fallback)
+ *   - Proper VALUE extraction from e-Stat JSON structure
+ *   - Average value used as marketSize signal (more meaningful than sum)
+ *   - Structured error response on failure, never returns source:'mock'
  */
 
 const axios = require('axios');
 
 const ESTAT_BASE = 'https://api.e-stat.go.jp/rest/3.0/app/json';
-const APP_ID = process.env.ESTAT_APP_ID;
 
 // Fixed dataset IDs per spec
 const DATASETS = {
-  population:       '0003412310',
+  population:        '0003412310',
   householdSpending: '0003190213',
-  businessStats:    '0003230501',
+  businessStats:     '0003230501',
 };
 
-// Keyword → category mapping
 function classifyKeyword(keyword) {
-  if (/美容|コスメ|スキンケア|化粧/.test(keyword)) return 'beauty';
-  if (/副業|仕事|転職|働き方|収入/.test(keyword))   return 'work';
-  if (/飲食|料理|食事|レストラン|食べ/.test(keyword)) return 'food';
+  if (/美容|コスメ|スキンケア|化粧/.test(keyword))  return 'beauty';
+  if (/副業|仕事|転職|働き方|収入|在宅/.test(keyword)) return 'work';
+  if (/飲食|料理|食事|レストラン|食べ/.test(keyword))  return 'food';
   return 'general';
 }
 
-// Category → which dataset gives the most relevant market-size signal
 function selectDatasetId(category) {
   switch (category) {
     case 'beauty': return DATASETS.householdSpending;
@@ -39,69 +37,83 @@ function selectDatasetId(category) {
 
 /**
  * fetchEstatBoost
+ * THROWS if ESTAT_APP_ID is missing — caller must handle.
+ * Never silently returns mock data.
  *
  * @param {string} keyword
- * @returns {{ marketSize: number, boost: number, category: string, source: 'live'|'mock', error: string|null }}
+ * @returns {{ marketSize: number, boost: number, category: string, source: 'live'|'error', error: string|null }}
  */
 async function fetchEstatBoost(keyword) {
-  // ── Env check ───────────────────────────────────────────────────
+  // ── Hard env check — throw, do NOT silently return mock ──────────────────
+  const APP_ID = process.env.ESTAT_APP_ID;
   if (!APP_ID) {
-    const msg = '[e-Stat] ESTAT_APP_ID is not set in environment variables. Register free at https://api.e-stat.go.jp/';
-    console.error(msg);
-    return {
-      marketSize: 0,
-      boost: 0,
-      category: classifyKeyword(keyword),
-      source: 'mock',
-      error: 'ESTAT_APP_ID missing',
-    };
+    throw new Error(
+      '[e-Stat] ESTAT_APP_ID is not set. Register free at https://api.e-stat.go.jp/ and add to Vercel env vars.'
+    );
   }
 
-  const category  = classifyKeyword(keyword);
+  const category    = classifyKeyword(keyword);
   const statsDataId = selectDatasetId(category);
 
-  console.log(`[e-Stat] Starting request — keyword="${keyword}" category="${category}" statsDataId="${statsDataId}"`);
+  console.log(`[e-Stat] Request start — keyword="${keyword}" category="${category}" statsDataId="${statsDataId}"`);
 
   try {
     const response = await axios.get(`${ESTAT_BASE}/getStatsData`, {
       params: {
         appId:       APP_ID,
         statsDataId: statsDataId,
-        limit:       10,
+        limit:       20,        // fetch more to get a meaningful average
         metaGetFlg:  'N',
         cntGetFlg:   'N',
       },
       timeout: 8000,
     });
 
-    const status = response.status;
-    console.log(`[e-Stat] Response status: ${status}`);
+    console.log(`[e-Stat] Response status: ${response.status}`);
 
     // Navigate the e-Stat JSON structure
+    // Value nodes can be an array of objects with a `$` or `_text` key
     const values = response.data?.GET_STATS_DATA?.STATISTICAL_DATA?.DATA_INF?.VALUE;
-    if (!values || !Array.isArray(values)) {
-      throw new Error('e-Stat response missing VALUE array');
+
+    if (!values) {
+      throw new Error('e-Stat response missing VALUE field — check statsDataId or API structure');
     }
 
-    // Sum all numeric values as a proxy market-size signal
-    const marketSize = values.reduce((sum, v) => {
-      const n = parseFloat(v?.$ ?? v?._text ?? 0);
-      return sum + (isNaN(n) ? 0 : n);
-    }, 0);
+    // e-Stat VALUE can be a single object or an array depending on result count
+    const valueArray = Array.isArray(values) ? values : [values];
 
-    console.log(`[e-Stat] marketSize computed: ${marketSize}`);
+    if (valueArray.length === 0) {
+      throw new Error('e-Stat returned empty VALUE array');
+    }
+
+    // Extract numeric values — e-Stat encodes them as text in $ or _text properties
+    const numericValues = valueArray
+      .map((v) => parseFloat(v?.$ ?? v?._text ?? v ?? 0))
+      .filter((n) => !isNaN(n) && n > 0);
+
+    if (numericValues.length === 0) {
+      throw new Error('e-Stat returned no parseable numeric values');
+    }
+
+    // Use average as market-size signal (more stable than sum for cross-dataset comparisons)
+    const marketSize = Math.round(
+      numericValues.reduce((sum, n) => sum + n, 0) / numericValues.length
+    );
+
+    console.log(`[e-Stat] marketSize (avg of ${numericValues.length} values): ${marketSize}`);
 
     // Scoring boost per spec
     let boost = 0;
-    if (marketSize > 5_000_000) boost = 15;  // +10 base + +5 additional
+    if (marketSize > 5_000_000)   boost = 15;
     else if (marketSize > 1_000_000) boost = 10;
+    else if (marketSize > 100_000)   boost = 5;
 
     return {
-      marketSize: Math.round(marketSize),
+      marketSize,
       boost,
       category,
       source: 'live',
-      error: null,
+      error:  null,
     };
 
   } catch (e) {
@@ -110,12 +122,13 @@ async function fetchEstatBoost(keyword) {
       : e.message;
     console.error(`[e-Stat] Request failed — ${errMsg}`);
 
+    // Return structured failure — source is 'error', NOT 'mock'
     return {
       marketSize: 0,
-      boost: 0,
+      boost:      0,
       category,
-      source: 'mock',
-      error: errMsg,
+      source:     'error',
+      error:      errMsg,
     };
   }
 }
