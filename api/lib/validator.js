@@ -1,120 +1,13 @@
 /**
- * validator.js — Phase 2 Gatekeeper (FIXED v2.1)
- *
- * FIXES:
- *   - Empty Rakuten/YouTube → penalised (reduced points)
- *   - Yahoo strong signal → keeps score stable even if others are empty
- *   - e-Stat live data → score boost applied
- *   - status:'empty' and status:'error' treated as low-signal, not zero
+ * validator.js — VC FUND OS v12 Scoring Engine
  */
-
-const THRESHOLD = 70;
-
-/**
- * computeValidationScore
- *
- * Weights:
- *   Google Trend recent score  → 35 pts
- *   Rakuten demand level       → 30 pts  (penalised if status=empty/error)
- *   YouTube content volume     → 20 pts  (penalised if status=empty/error)
- *   Yahoo! Shopping volume     → 15 pts  (stable even if others empty)
- *   e-Stat boost               → up to +15 pts (only when base score 60–75)
- */
-function computeValidationScore(trend, rakuten, youtube, yahoo, estat = null) {
-  let score = 0;
-  const breakdown = {};
-
-  // ── Google Trends (35 pts) ──────────────────────────────────────
-  const trendScore = Math.min(35, Math.round((trend?.recentAvg ?? 0) * 0.35));
-  score += trendScore;
-  breakdown.googleTrend = { raw: trend?.recentAvg ?? 0, points: trendScore, max: 35 };
-
-  // ── Rakuten Demand (30 pts) — penalise empty/error ──────────────
-  let rakutenPts;
-  const rakutenStatus = rakuten?.status ?? 'ok';
-  if (rakutenStatus === 'empty') {
-    // Empty results: not an API error, but low signal — give minimum points
-    rakutenPts = 3;
-    breakdown.rakutenDemand = {
-      raw: 'empty', points: rakutenPts, max: 30,
-      note: 'Empty results — penalised. Consider keyword adjustment.',
-    };
-  } else if (rakutenStatus === 'error') {
-    rakutenPts = 0;
-    breakdown.rakutenDemand = { raw: 'error', points: 0, max: 30, note: 'API error — 0 pts' };
-  } else {
-    const demandMap = { '非常に高い': 30, '高い': 24, '中程度': 15, '低い': 6, 'Unknown': 0 };
-    rakutenPts = demandMap[rakuten?.demandSignal?.level] ?? 0;
-    breakdown.rakutenDemand = { raw: rakuten?.demandSignal?.level ?? 'Unknown', points: rakutenPts, max: 30 };
-  }
-  score += rakutenPts;
-
-  // ── YouTube Volume (20 pts) — penalise empty/error ──────────────
-  let ytPts;
-  const youtubeStatus = youtube?.status ?? 'ok';
-  if (youtubeStatus === 'empty') {
-    ytPts = 2;
-    breakdown.youtubeVolume = {
-      raw: 'empty', points: ytPts, max: 20,
-      note: 'Empty results — penalised. Try broader keyword.',
-    };
-  } else if (youtubeStatus === 'error') {
-    ytPts = 0;
-    breakdown.youtubeVolume = { raw: 'error', points: 0, max: 20, note: 'API error — 0 pts' };
-  } else {
-    const ytResults = youtube?.totalResults ?? 0;
-    ytPts = ytResults > 50000 ? 20 : ytResults > 10000 ? 15 : ytResults > 1000 ? 8 : 2;
-    breakdown.youtubeVolume = { raw: ytResults, points: ytPts, max: 20 };
-  }
-  score += ytPts;
-
-  // ── Yahoo! Shopping Volume (15 pts) — keeps score stable ────────
-  // Yahoo is working correctly — full weight maintained
-  const yhHits = yahoo?.totalHits ?? 0;
-  const yhPts  = yhHits > 10000 ? 15 : yhHits > 3000 ? 11 : yhHits > 500 ? 6 : 2;
-  score += yhPts;
-  breakdown.yahooShopping = { raw: yhHits, points: yhPts, max: 15 };
-
-  const baseScore = Math.min(100, score);
-  breakdown.baseScore = baseScore;
-
-  // ── e-Stat Boost (only when base score is 60–75) ─────────────────
-  let estatResult = { marketSize: 0, boost: 0, source: 'skipped', error: null };
-  if (estat && estat.source === 'live' && baseScore >= 60 && baseScore <= 75) {
-    const boost = estat.boost ?? 0;
-    estatResult = {
-      marketSize: estat.marketSize ?? 0,
-      boost,
-      category:   estat.category ?? 'general',
-      source:     estat.source,
-      error:      estat.error ?? null,
-    };
-    score = Math.min(100, baseScore + boost);
-    breakdown.estatBoost = { marketSize: estatResult.marketSize, boost, appliedRange: '60–75' };
-  } else {
-    score = baseScore;
-    let skipReason;
-    if (!estat)                           skipReason = 'e-Stat not called';
-    else if (estat.source === 'error')    skipReason = `e-Stat returned error: ${estat.error}`;
-    else if (baseScore < 60)              skipReason = `base score ${baseScore} below 60`;
-    else if (baseScore > 75)              skipReason = `base score ${baseScore} above 75`;
-    else                                  skipReason = 'unknown';
-    breakdown.estatBoost = { skipped: true, reason: skipReason };
-  }
-
-  const finalScore = Math.min(100, score);
-
-  return {
-    score: finalScore,
-    baseScore,
-    threshold: THRESHOLD,
-    unlocksPaidLayer: finalScore >= THRESHOLD,
-    breakdown,
-    estat: estatResult,
-    verdict: finalScore >= THRESHOLD
-      ? `✅ スコア ${finalScore}/100 — Claude生成が解除されました`
-      : `🔒 スコア ${finalScore}/100 — Claude生成にはスコア${THRESHOLD}以上が必要です`,
-  };
-}
-
-module.exports = { computeValidationScore, THRESHOLD };
+const THRESHOLD=70;
+function classifyIntent(k){const kw=k||'';if(/自動化|SaaS|業務|管理|システム|AI|DX|クラウド|分析|効率|請求|勤怠|在庫|CRM|ERP/.test(kw))return'enterprise';if(/投資|株|FX|仮想通貨|資産|節税|副業|稼ぐ|収入/.test(kw))return'financial';if(/動画|YouTube|配信|ブログ|SNS|クリエイター/.test(kw))return'content';if(/食|グルメ|ファッション|美容|旅行|ペット|ダイエット|健康/.test(kw))return'consumer';return'hybrid';}
+function enterpriseBonus(kw,i){if(i!=='enterprise')return 0;return/自動化|AI|DX|システム|クラウド|SaaS/.test(kw)?20:12;}
+function saturationPenalty(rc,yh){const t=(rc||0)+(yh||0);if(t>200000)return-20;if(t>100000)return-12;if(t>50000)return-6;return 0;}
+function estimateMockScores(kw,i){const h=/AI|副業|フリーランス|ダイエット|転職|資産運用|自動化|ECサイト|SaaS/.test(kw);const m=/ミールキット|ペットフード|プログラミング|英語|ヨガ|サブスク/.test(kw);let b=h?74:m?61:50;if(i==='enterprise')b+=10;return{trendPts:Math.min(35,Math.round(b*0.35)),rakutenPts:Math.min(30,Math.round(b*0.28)),ytPts:Math.min(20,Math.round(b*0.18)),yahooPts:Math.min(15,Math.round(b*0.14))};}
+function forecastARR(s,i){const b=s>=80?500:s>=65?120:s>=50?35:8;const m=i==='enterprise'?3.5:i==='financial'?2.0:1.0;const y1=Math.round(b*m);return{year1:`¥${y1}M`,year2:`¥${Math.round(y1*2.8)}M`,year3:`¥${Math.round(y1*6.5)}M`,tier:y1>=1000?'venture-scale':y1>=100?'strong-SaaS':y1>=10?'early-SaaS':'weak',survivalProbability:s>=75?'68%':s>=55?'42%':'21%'};}
+function generateVCIdeas(kw,i,s){const t={enterprise:[{name:`${kw}オートメーター`,category:'SaaS / 業務自動化',target:'日本SME・中堅企業',pain:'手動作業・Excel依存による非効率',model:'サブスク ¥9,800/月〜',justification:'日本DX遅延市場で高ARR可能性'},{name:`${kw}ダッシュボード`,category:'B2B SaaS',target:'管理部門',pain:'リアルタイムKPI把握困難',model:'¥3,000/user/月',justification:'エンタープライズ潜在需要高い'},{name:`${kw}コネクト`,category:'API統合',target:'ITベンダー',pain:'レガシー連携コスト高',model:'API従量',justification:'プラットフォーム効果'}],financial:[{name:`${kw}ファイナンス`,category:'FinTech',target:'投資家・副業層',pain:'資産管理・税務複雑',model:'¥1,480/月+AUM',justification:'規制緩和で市場拡大'},{name:`${kw}インカム`,category:'副業支援',target:'フリーランス',pain:'請求・確定申告煩雑',model:'¥780/月',justification:'副業人口急増'},{name:`${kw}AIアナリスト`,category:'AI投資',target:'個人投資家',pain:'投資判断コスト高',model:'¥2,980/月',justification:'高い支払い意欲'}],consumer:[{name:`${kw}マーケット`,category:'EC',target:'20-40代',pain:'良質商品アクセス困難',model:'GMV 8-12%',justification:'リピート率高い'},{name:`${kw}サブスク`,category:'D2C',target:'ライフスタイル層',pain:'定期購入不便',model:'¥2,980/月',justification:'高LTV'},{name:`${kw}AIコーチ`,category:'AI Consumer',target:'個人',pain:'専門知識アクセス困難',model:'¥980/月',justification:'AI市場急成長'}],hybrid:[{name:`${kw}プラットフォーム`,category:'SaaS',target:'事業者&消費者',pain:'需給非効率',model:'手数料+¥4,800/月',justification:'ネットワーク効果'},{name:`${kw}AI`,category:'AI SaaS',target:'中小&個人',pain:'AI活用障壁',model:'従量+サブスク',justification:'AI民主化'},{name:`${kw}クラウド`,category:'クラウド',target:'中小企業',pain:'IT投資高',model:'¥6,800/月〜',justification:'クラウド移行需要'}],content:[{name:`${kw}スタジオ`,category:'クリエイターツール',target:'クリエイター',pain:'制作配信煩雑',model:'¥4,800/月',justification:'エコノミー成長'},{name:`${kw}アナリティクス`,category:'分析',target:'メディア企業',pain:'ROI測定困難',model:'¥5,000/月〜',justification:'データドリブン需要'},{name:`${kw}マネタイザー`,category:'FinTech×Content',target:'インフルエンサー',pain:'収益化複雑',model:'15%+月額',justification:'市場未成熟'}]};return(t[i]||t.hybrid).slice(0,3);}
+function classifyMarket(s){if(s>=75)return'high_opportunity';if(s>=51)return'growing';if(s>=31)return'emerging';return'weak';}
+function computeValidationScore(trend,rakuten,youtube,yahoo){const kw=trend?.keyword||'';const i=classifyIntent(kw);const isMock=!!(rakuten?.mock&&youtube?.mock);let s=0;const b={};if(isMock){const e=estimateMockScores(kw,i);s=e.trendPts+e.rakutenPts+e.ytPts+e.yahooPts;b.googleTrend={raw:trend?.recentAvg??0,points:e.trendPts,max:35,note:'estimated'};b.rakutenDemand={raw:'推定',points:e.rakutenPts,max:30,note:'estimated'};b.youtubeVolume={raw:'推定',points:e.ytPts,max:20,note:'estimated'};b.yahooShopping={raw:yahoo?.totalHits??0,points:e.yahooPts,max:15};}else{const tp=Math.min(35,Math.round((trend?.recentAvg??0)*0.35));s+=tp;b.googleTrend={raw:trend?.recentAvg??0,points:tp,max:35};const dm={'非常に高い':30,'高い':24,'中程度':15,'低い':6,'Unknown':8};const rp=dm[rakuten?.demandSignal?.level]??8;s+=rp;b.rakutenDemand={raw:rakuten?.demandSignal?.level??'—',points:rp,max:30};const yr=youtube?.totalResults??0;const yp=yr>50000?20:yr>10000?15:yr>1000?10:5;s+=yp;b.youtubeVolume={raw:yr,points:yp,max:20};const yh=yahoo?.totalHits??0;const yhp=yh>10000?15:yh>3000?11:yh>500?7:3;s+=yhp;b.yahooShopping={raw:yh,points:yhp,max:15};}const eb=enterpriseBonus(kw,i);if(eb>0){s+=eb;b.enterpriseLatent={raw:i,points:eb,max:20};}const pen=saturationPenalty(rakuten?.demandSignal?.itemCount,yahoo?.totalHits);if(pen<0){s+=pen;b.saturationPenalty={raw:'overcrowded',points:pen,max:0};}s=Math.max(0,Math.min(100,s));const mt=classifyMarket(s);const arr=forecastARR(s,i);const vi=generateVCIdeas(kw,i,s);const th={high_opportunity:`${kw}市場は高成長。3年で${arr.year3} ARR可能。シリーズA推奨。`,growing:`${kw}市場は成長中。PMF後シード検討。3年ARR予測: ${arr.year3}。`,emerging:`${kw}市場はエマージング。日本固有の非効率対応が鍵。プレシード適正。`,weak:`${kw}市場は弱い。ニッチ特化必要。慎重な資本配分推奨。`};return{score:s,threshold:THRESHOLD,unlocksPaidLayer:s>=THRESHOLD,breakdown:b,intent:i,marketType:mt,arr:arr,vcIdeas:vi,isMockData:isMock,verdict:s>=THRESHOLD?`✅ スコア ${s}/100 — Claude解除`:`🔒 スコア ${s}/100 — あと${THRESHOLD-s}点`,vcThesis:th[mt]};}
+module.exports={computeValidationScore,THRESHOLD};

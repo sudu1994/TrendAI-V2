@@ -851,7 +851,7 @@ async function analyze(){
     tickerScore(kw,data.trend?.score);
     renderTrend(data.trend,kw);
     renderDS(data.rakuten,data.youtube,data.yahoo,data.estat);
-    renderPlan(data.result?.businessPlan);
+    renderPlan(data.result?.businessPlan,data.validation);
     const site=data.result?.websiteHTML||'';
     if(site){
       genHTML=site;document.getElementById('siteFrame').srcdoc=site;

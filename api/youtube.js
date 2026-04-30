@@ -4,51 +4,45 @@
 const axios = require('axios');
 const { handleOptions, ok, err } = require('./lib/helpers');
 
-const YT_KEY  = process.env.YOUTUBE_API_KEY;
+const YT_KEY = process.env.YOUTUBE_API_KEY;
 const YT_BASE = 'https://www.googleapis.com/youtube/v3';
 
 module.exports = async function handler(req, res) {
   if (handleOptions(req, res)) return;
 
   const keyword = req.query.keyword || '';
-  const mode    = req.query.mode    || (keyword ? 'search' : 'trending');
+  const mode = req.query.mode || (keyword ? 'search' : 'trending');
 
-  // ── Env guard ─────────────────────────────────────────────────────────────
-  console.log(`[YouTube] YOUTUBE_API_KEY present: ${Boolean(YT_KEY)}`);
   if (!YT_KEY) {
-    const msg = 'YOUTUBE_API_KEY is not configured. Enable YouTube Data API v3 free at https://console.cloud.google.com and add key to Vercel env vars.';
-    console.error(`[YouTube] ${msg}`);
-    return err(res, 503, msg, {
-      source: 'mock',
-      error: 'YOUTUBE_API_KEY missing',
-      setup: 'https://console.cloud.google.com',
+    return ok(res, {
+      mock: true,
+      setup: 'Enable YouTube Data API v3 free at https://console.cloud.google.com → add YOUTUBE_API_KEY to Vercel env vars',
+      data: mode === 'trending' ? mockTrending() : mockSearch(keyword),
     });
   }
-
-  console.log(`[YouTube] Request start — keyword="${keyword}" mode="${mode}"`);
 
   try {
     if (mode === 'trending') {
       const r = await axios.get(`${YT_BASE}/videos`, {
         params: {
-          part:       'snippet,statistics',
-          chart:      'mostPopular',
+          part: 'snippet,statistics',
+          chart: 'mostPopular',
           regionCode: 'JP',
-          hl:         'ja',
+          hl: 'ja',
           maxResults: 20,
-          key:        YT_KEY,
+          key: YT_KEY,
         },
         timeout: 8000,
       });
-      console.log(`[YouTube] Trending response status: ${r.status}`);
 
       const videos = r.data.items.map(v => ({
-        title:     v.snippet.title,
-        channel:   v.snippet.channelTitle,
+        title: v.snippet.title,
+        channel: v.snippet.channelTitle,
         viewCount: parseInt(v.statistics.viewCount || 0),
-        tags:      v.snippet.tags?.slice(0, 5) || [],
+        tags: v.snippet.tags?.slice(0, 5) || [],
       }));
 
+      // Extract keyword frequency from titles as trend signal
       const words = videos.flatMap(v =>
         v.title.split(/[\s　・【】「」（）()]+/).filter(w => w.length > 1)
       );
@@ -60,9 +54,7 @@ module.exports = async function handler(req, res) {
         .map(([word, count]) => ({ word, count }));
 
       return ok(res, {
-        source: 'live',
-        error:  null,
-        apiSource: 'youtube_data_api_v3',
+        source: 'youtube_data_api_v3',
         region: 'JP',
         trendKeywords: topKeywords,
         videoCount: videos.length,
@@ -75,41 +67,48 @@ module.exports = async function handler(req, res) {
 
     const r = await axios.get(`${YT_BASE}/search`, {
       params: {
-        part:              'snippet',
-        q:                 keyword,
-        type:              'video',
-        regionCode:        'JP',
+        part: 'snippet',
+        q: keyword,
+        type: 'video',
+        regionCode: 'JP',
         relevanceLanguage: 'ja',
-        order:             'viewCount',
-        maxResults:        10,
-        publishedAfter:    sixMonthsAgo.toISOString(),
-        key:               YT_KEY,
+        order: 'viewCount',
+        maxResults: 10,
+        publishedAfter: sixMonthsAgo.toISOString(),
+        key: YT_KEY,
       },
       timeout: 8000,
     });
-    console.log(`[YouTube] Search response status: ${r.status}`);
 
     return ok(res, {
-      source: 'live',
-      error:  null,
-      apiSource: 'youtube_data_api_v3',
+      source: 'youtube_data_api_v3',
       keyword,
       totalResults: r.data.pageInfo?.totalResults || 0,
       results: r.data.items.map(v => ({
-        title:       v.snippet.title,
-        channel:     v.snippet.channelTitle,
+        title: v.snippet.title,
+        channel: v.snippet.channelTitle,
         publishedAt: v.snippet.publishedAt,
       })),
     });
 
   } catch (e) {
-    const errMsg = e.response
-      ? `HTTP ${e.response.status}: ${JSON.stringify(e.response.data?.error?.message || e.message)}`
-      : e.message;
-    console.error(`[YouTube] Request failed — ${errMsg}`);
-    return err(res, 502, `YouTube API error: ${errMsg}`, {
-      source: 'mock',
-      error:  errMsg,
+    return err(res, 500, e.message, {
+      mock: true,
+      data: mode === 'trending' ? mockTrending() : mockSearch(keyword),
     });
   }
 };
+
+function mockTrending() {
+  return {
+    note: 'Mock — add YOUTUBE_API_KEY (free) to Vercel env vars',
+    trendKeywords: [
+      { word: '副業', count: 9 }, { word: 'AI', count: 7 },
+      { word: '在宅', count: 5 }, { word: '稼ぐ', count: 4 },
+    ],
+  };
+}
+
+function mockSearch(keyword) {
+  return { note: 'Mock', keyword, totalResults: 11800 };
+}

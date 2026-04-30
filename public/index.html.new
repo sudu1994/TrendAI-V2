@@ -1,0 +1,8 @@
+[copying entire fixed index.html with the 3 render functions from /tmp/fix_renders.js replacing lines 780-899]
+EOF
+# Actually let me just patch the 3 functions in place
+sed -n '1,779p' public/index.html > /tmp/html_pre.txt
+cat /tmp/fix_renders.js >> /tmp/html_pre.txt
+sed -n '900,910p' public/index.html >> /tmp/html_pre.txt
+cp /tmp/html_pre.txt public/index.html
+echo "Patched renderGate, renderDS, renderPlan with VC output support"
