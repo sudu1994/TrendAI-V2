@@ -722,43 +722,42 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSettings();});
 const BCAP=3000,BK=NS+'budget_v1';
 
 /* ── GOOGLE SHEETS INTEGRATION ── */
-const SHEETS_URL='https://script.google.com/macros/s/AKfycbw8w8XDzKcTuw6zkwIL6auWTr-wbCK-EzU0AlrtUpx5FOWYQRoWJKG-CPVKtf5cRvtFHA/exec';
+const SHEETS_URL='https://script.google.com/macros/s/AKfycbwH8V4FQi5-CWhv6wUzWvDJxeHTtc_IeDlbWhiZmTJq5TJaQtgtXBLm7IfWlwsEZz1KYQ/exec';
 
-async function sendToSheets(data){
-  if(!SHEETS_URL)return;
-  const post=(payload)=>fetch(SHEETS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).catch(()=>{});
+// ── SHEETS — all writes go via /api/sheets (server-side proxy, no CORS) ──
+async function sheetPost(payload){
   try{
-    const v=data.validation||{},t=data.trend||{},r=data.result||{};
-    // 1. Idea summary (learning loop primary feed)
-    await post({type:'idea',timestamp:new Date().toISOString(),keyword:t.keyword||'',score:v.score||0,
-      arr_estimate:v.arr?.year1||'',intent:v.intent||'',market_type:v.marketType||'',
-      idea_json:{arr:v.arr,vcIdeas:v.vcIdeas,businessPlan:r.businessPlan||{},
-        generatedBy:r.generatedBy||'none',websiteGenerated:!!(r.websiteHTML),
-        learnedFrom:data.knowledgeCtx?.dataPoints||0}});
-    // 2. Raw signals
-    await post({type:'signals',keyword:t.keyword||'',trend:data.trend||{},
-      rakuten:data.rakuten||{},youtube:data.youtube||{},yahoo:data.yahoo||{},
-      processed_at:new Date().toISOString()});
-    // 3. Validation with full context for learning
-    await post({type:'validation',keyword:t.keyword||'',score:v.score||0,
-      verdict:v.verdict||'',intent:v.intent||'',market_type:v.marketType||'',
-      unlocks_claude:!!(v.unlocksPaidLayer),arr_year1:v.arr?.year1||'',
-      arr_year3:v.arr?.year3||'',vc_thesis:v.vcThesis||''});
-    console.log('[Sheets] ✅ Sent + learned from',data.knowledgeCtx?.dataPoints||0,'data points');
-  }catch(err){console.warn('[Sheets] ⚠',err.message);}
+    const r=await fetch(API_BASE+'/api/sheets',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const d=await r.json();
+    if(!d.sent)console.warn('[Sheets] server said:',d);
+    else console.log('[Sheets] ✅',payload.type,'→',payload.keyword||'');
+  }catch(e){console.warn('[Sheets] ⚠',payload.type,e.message);}
 }
 
-// Send AI-generated ideas to Sheets (learning output tab)
+async function sendToSheets(data){
+  const v=data.validation||{},t=data.trend||{},r=data.result||{};
+  sheetPost({type:'idea',timestamp:new Date().toISOString(),keyword:t.keyword||'',score:v.score||0,
+    arr_estimate:v.arr?.year1||'',intent:v.intent||'',market_type:v.marketType||'',
+    idea_json:{arr:v.arr,vcIdeas:v.vcIdeas,businessPlan:r.businessPlan||{},
+      generatedBy:r.generatedBy||'none',websiteGenerated:!!(r.websiteHTML),
+      learnedFrom:data.knowledgeCtx?.dataPoints||0}});
+  sheetPost({type:'signals',keyword:t.keyword||'',trend:data.trend||{},
+    rakuten:data.rakuten||{},youtube:data.youtube||{},yahoo:data.yahoo||{},
+    processed_at:new Date().toISOString()});
+  sheetPost({type:'validation',keyword:t.keyword||'',score:v.score||0,
+    verdict:v.verdict||'',intent:v.intent||'',market_type:v.marketType||'',
+    unlocks_claude:!!(v.unlocksPaidLayer),arr_year1:v.arr?.year1||'',
+    arr_year3:v.arr?.year3||'',vc_thesis:v.vcThesis||''});
+}
+
 async function sendAiIdeasToSheets(ideas,context){
-  if(!SHEETS_URL||!ideas||!ideas.length)return;
+  if(!ideas||!ideas.length)return;
   for(const idea of ideas){
-    fetch(SHEETS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-      type:'ai_idea',...idea,
+    sheetPost({type:'ai_idea',...idea,
       data_points_used:context?.learnedFrom||0,
-      generated_at:new Date().toISOString()
-    })}).catch(()=>{});
+      generated_at:new Date().toISOString()});
   }
-  console.log('[Sheets] ✅ AI ideas sent:',ideas.length,'ideas');
 }
 function getBudget(){try{const r=JSON.parse(localStorage.getItem(BK)||'{}');const m=new Date().toISOString().slice(0,7);if(r.month!==m)return{month:m,spend:0,searches:0};return r;}catch{return{month:new Date().toISOString().slice(0,7),spend:0,searches:0};}}
 function saveBudget(b){localStorage.setItem(BK,JSON.stringify(b));}
