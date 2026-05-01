@@ -16,11 +16,28 @@ const axios = require('axios');
 const { handleOptions, ok, err } = require('./lib/helpers');
 const { checkBudget, trackUsage } = require('./lib/budget');
 const { computeValidationScore } = require('./lib/validator');
-// Learning loop — lazy require to avoid circular deps
-let _learnModule = null;
-function getLearnModule() {
-  if (!_learnModule) { try { _learnModule = require('./learn'); } catch(e) { _learnModule = { getKnowledgeContext: async () => ({ hasHistory: false, dataPoints: 0 }) }; } }
-  return _learnModule;
+// Learning loop — fetch history from Sheets inline (no separate module needed)
+const SHEETS_URL = process.env.SHEETS_URL || '';
+async function getKnowledgeContext() {
+  if (!SHEETS_URL) return { hasHistory: false, dataPoints: 0, intelligence: null, patterns: null };
+  try {
+    const r = await axios.get(SHEETS_URL + '?type=dump', { timeout: 8000 });
+    const history = r.data?.data || r.data || {};
+    const ideas = Array.isArray(history.ideas) ? history.ideas : [];
+    if (!ideas.length) return { hasHistory: false, dataPoints: 0, intelligence: null, patterns: null };
+    const winners = ideas.filter(r => Number(r.score) >= 70);
+    const topKw = [...ideas].sort((a,b)=>Number(b.score)-Number(a.score)).slice(0,3).map(r=>({keyword:r.keyword,score:Number(r.score)}));
+    const scores = ideas.map(r=>Number(r.score)).filter(s=>!isNaN(s));
+    const patterns = { totalSearches: ideas.length, winnerCount: winners.length,
+      winRate: Math.round(winners.length/ideas.length*100),
+      avgScore: scores.length ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) : 0,
+      topKeywords: topKw, winnerSample: winners.slice(0,3).map(r=>r.keyword) };
+    return { hasHistory: true, dataPoints: ideas.length, patterns,
+      intelligence: { market_brief: '', winning_pattern: '', learning_summary: '' } };
+  } catch(e) {
+    console.warn('[analyze] knowledge fetch failed:', e.message);
+    return { hasHistory: false, dataPoints: 0, intelligence: null, patterns: null };
+  }
 }
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -204,7 +221,7 @@ module.exports = async (req, res) => {
 
     // Fetch learned market knowledge (non-blocking — fails silently)
     let knowledgeCtx = { hasHistory: false, dataPoints: 0 };
-    try { knowledgeCtx = await getLearnModule().getKnowledgeContext(false); } catch(e) { console.warn('[analyze] learn failed:', e.message); }
+    try { knowledgeCtx = await getKnowledgeContext(); } catch(e) { console.warn('[analyze] learn failed:', e.message); }
 
     // Groq draft (free) — never let a Groq failure abort the whole request
     let aiContent;
