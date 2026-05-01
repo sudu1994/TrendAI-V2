@@ -66,7 +66,7 @@ async function fetchTrendData(keyword) {
       top: (res.data?.related_queries?.top || []).slice(0, 3).map((q) => q.query),
       values: timeline.map((d) => ({ date: d.date, value: Number(d.values?.[0]?.extracted_value ?? 0) })),
     };
-  } catch { return mockTrendData(keyword); }
+  } catch(e) { console.error('[Trends] FAILED:', e.response?.status, e.response?.data || e.message); return mockTrendData(keyword); }
 }
 
 async function fetchRakutenData(keyword) {
@@ -87,7 +87,7 @@ async function fetchRakutenData(keyword) {
       demandSignal: { level: count > 5000 ? '高い' : count > 1000 ? '中程度' : '低い', itemCount: count, avgPrice, totalReviews },
       topItems: items.slice(0, 3).map((i) => ({ name: i.itemName?.slice(0, 40), price: i.itemPrice, reviews: i.reviewCount || 0 })),
     };
-  } catch { return { mock: true, demandSignal: { level: '低い', itemCount: 0, avgPrice: 0, totalReviews: 0 } }; }
+  } catch(e) { console.error('[Rakuten] FAILED:', e.response?.status, e.response?.data || e.message); return { mock: true, demandSignal: { level: '低い', itemCount: 0, avgPrice: 0, totalReviews: 0 } }; }
 }
 
 async function fetchYoutubeData(keyword) {
@@ -115,7 +115,7 @@ async function fetchYoutubeData(keyword) {
     }));
     const avgViews = topVideos.length ? Math.round(topVideos.reduce((s, v) => s + v.views, 0) / topVideos.length) : 0;
     return { mock: false, keyword, totalResults, topVideos, avgViews };
-  } catch { return { mock: true, totalResults: 0, topVideos: [], keyword }; }
+  } catch(e) { console.error('[YouTube] FAILED:', e.response?.status, e.response?.data?.error?.message || e.message); return { mock: true, totalResults: 0, topVideos: [], keyword }; }
 }
 
 async function fetchYahooShoppingData(keyword) {
@@ -233,6 +233,7 @@ module.exports = async (req, res) => {
 
   try {
     // ── PHASE 1: Free Layer — all in parallel ─────────────────────────────
+    // Run all data fetches in parallel — log which ones succeed
     const [trend, rakuten, youtube, yahoo] = await Promise.all([
       fetchTrendData(keyword),
       fetchRakutenData(keyword),
@@ -284,6 +285,16 @@ module.exports = async (req, res) => {
     res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate');
     return ok(res, {
       trend, rakuten, youtube, yahoo,
+      _debug: {
+        trendLive: !trend?.isMock && trend?.score > 0,
+        rakutenLive: !rakuten?.mock,
+        youtubeLive: !youtube?.mock,
+        yahooLive: !yahoo?.mock,
+        serpApiKey: !!process.env.SERPAPI_KEY,
+        rakutenKey: !!process.env.RAKUTEN_APP_ID,
+        youtubeKey: !!process.env.YOUTUBE_API_KEY,
+        yahooKey: !!process.env.YAHOO_CLIENT_ID,
+      },
       validation,           // ← exposes score + verdict to frontend
       budgetStatus,
       knowledgeCtx: {       // ← learning loop context for frontend display
