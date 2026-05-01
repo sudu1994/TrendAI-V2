@@ -16,6 +16,12 @@ const axios = require('axios');
 const { handleOptions, ok, err } = require('./lib/helpers');
 const { checkBudget, trackUsage } = require('./lib/budget');
 const { computeValidationScore } = require('./lib/validator');
+// Learning loop — lazy require to avoid circular deps
+let _learnModule = null;
+function getLearnModule() {
+  if (!_learnModule) { try { _learnModule = require('./learn'); } catch(e) { _learnModule = { getKnowledgeContext: async () => ({ hasHistory: false, dataPoints: 0 }) }; } }
+  return _learnModule;
+}
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -110,37 +116,20 @@ async function fetchYahooShoppingData(keyword) {
 }
 
 // Groq — free, used for initial business plan draft (Phase 1)
-async function generateDraftWithGroq(trendData, rakutenData, yahooData) {
+async function generateDraftWithGroq(trendData, rakutenData, yahooData, knowledgeCtx) {
   const GROQ_API_KEY = process.env.GROQ_API_KEY;
   if (!GROQ_API_KEY) return mockContent(trendData);
 
-  // Compact prompt — minimise tokens while retaining structure
-  const prompt = `Japanese business strategist. Keyword: ${trendData.keyword}
-Trend: ${trendData.score}/100 (${trendData.trend})
-Rakuten: ${rakutenData?.demandSignal?.level}, avg ¥${rakutenData?.demandSignal?.avgPrice}, ${rakutenData?.demandSignal?.itemCount} items
-Yahoo: ${yahooData?.totalHits} listings, avg ¥${yahooData?.avgPrice}
-
-Return ONLY raw JSON (no markdown):
-{"plan":{"title":"","tagline":"","opportunity":"","target":"","service":"","differentiation":[],"revenueModel":"","actionPlan":[],"seoKeywords":[],"risk":""},"copy":{"heroHeadline":"","heroSub":"","heroCta":"","problems":[{"icon":"","title":"","desc":""}],"features":[{"icon":"","title":"","desc":""}],"pricing":[{"name":"","price":"","period":"","features":[],"cta":"","highlighted":false}],"testimonials":[{"name":"","role":"","initials":"","color":"","stars":5,"text":""}],"companyName":""}}`;
-
-  let attempts = 0;
-  while (attempts < 3) {
-    try {
-      const response = await axios.post(
-        'https://api.groq.com/openai/v1/chat/completions',
-        { model: 'llama-3.3-70b-versatile', max_tokens: 3000, messages: [{ role: 'user', content: prompt }] },
-        { headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${GROQ_API_KEY}` }, timeout: 60000 }
-      );
-      const raw = response.data?.choices?.[0]?.message?.content ?? '';
-      const clean = raw.replace(/^```json\n?|```[\s\S]*?$/gm, '').trim();
-      return JSON.parse(clean);
-    } catch (e) {
-      if (e.response?.status === 429 || e.code === 'ECONNABORTED') { attempts++; await sleep(10000); continue; }
-      throw new Error(`Groq generation failed: ${e.message}`);
-    }
+  // Inject learned market knowledge when available
+  let learnedContext = '';
+  if (knowledgeCtx && knowledgeCtx.hasHistory && knowledgeCtx.intelligence) {
+    const intel = knowledgeCtx.intelligence;
+    const pat   = knowledgeCtx.patterns;
+    learnedContext = `\n【学習済み市場インテリジェンス — ${pat.totalSearches}件の検索データから学習】\n- 市場概要: ${intel.market_brief || ''}\n- 勝者パターン: ${intel.winning_pattern || ''}\n- 避けるべきパターン: ${intel.avoid_pattern || ''}\n- 高スコアキーワード例: ${(pat.topKeywords||[]).slice(0,3).map(k=>k.keyword+'('+k.score+'点)').join('、')}\n- 学習サマリー: ${intel.learning_summary || ''}\n上記の学習内容を踏まえて、より精度の高いビジネスプランを生成してください。\n`;
   }
-  throw new Error('Groq API unavailable after retries.');
-}
+
+  const dataRef = knowledgeCtx && knowledgeCtx.dataPoints ? knowledgeCtx.dataPoints + '件の学習データを参照' : '初回生成';
+  const prompt = `あなたは日本市場専門のビジネスストラテジストです。${learnedContext}\nキーワード: ${trendData.keyword}\nトレンド: ${trendData.score}/100 (${trendData.trend})\n楽天: ${rakutenData?.demandSignal?.level}、平均¥${rakutenData?.demandSignal?.avgPrice}、${rakutenData?.demandSignal?.itemCount}件\nYahoo: ${yahooData?.totalHits}件、平均¥${yahooData?.avgPrice}\n\nJSONのみ返してください（マークダウン不要）:\n{\"plan\":{\"title\":\"\",\"tagline\":\"\",\"opportunity\":\"\",\"target\":\"\",\"service\":\"\",\"differentiation\":[],\"revenueModel\":\"\",\"actionPlan\":[],\"seoKeywords\":[],\"risk\":\"\",\"learnedFrom\":\"${dataRef}\"},\"copy\":{\"heroHeadline\":\"\",\"heroSub\":\"\",\"heroCta\":\"\",\"problems\":[{\"icon\":\"\",\"title\":\"\",\"desc\":\"\"}],\"features\":[{\"icon\":\"\",\"title\":\"\",\"desc\":\"\"}],\"pricing\":[{\"name\":\"\",\"price\":\"\",\"period\":\"\",\"features\":[],\"cta\":\"\",\"highlighted\":false}],\"testimonials\":[{\"name\":\"\",\"role\":\"\",\"initials\":\"\",\"color\":\"\",\"stars\":5,\"text\":\"\"}],\"companyName\":\"\"}}`;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PHASE 3 — PAID LAYER (Claude via corporate key — gated by score ≥ 70)
@@ -213,10 +202,14 @@ module.exports = async (req, res) => {
       fetchYahooShoppingData(keyword),
     ]);
 
+    // Fetch learned market knowledge (non-blocking — fails silently)
+    let knowledgeCtx = { hasHistory: false, dataPoints: 0 };
+    try { knowledgeCtx = await getLearnModule().getKnowledgeContext(false); } catch(e) { console.warn('[analyze] learn failed:', e.message); }
+
     // Groq draft (free) — never let a Groq failure abort the whole request
     let aiContent;
     try {
-      aiContent = await generateDraftWithGroq(trend, rakuten, yahoo);
+      aiContent = await generateDraftWithGroq(trend, rakuten, yahoo, knowledgeCtx);
     } catch (groqErr) {
       console.error('Groq draft failed (non-fatal):', groqErr.message);
       aiContent = mockContent(trend);
@@ -255,6 +248,12 @@ module.exports = async (req, res) => {
       trend, rakuten, youtube, yahoo,
       validation,           // ← exposes score + verdict to frontend
       budgetStatus,
+      knowledgeCtx: {       // ← learning loop context for frontend display
+        hasHistory: knowledgeCtx.hasHistory,
+        dataPoints: knowledgeCtx.dataPoints,
+        marketBrief: knowledgeCtx.intelligence?.market_brief || null,
+        learningIteration: knowledgeCtx.patterns ? Math.floor((knowledgeCtx.patterns.totalSearches||0)/10)+1 : 0,
+      },
       result: {
         businessPlan: aiContent?.plan || null,
         websiteHTML,
