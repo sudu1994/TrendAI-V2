@@ -148,6 +148,27 @@ async function generateDraftWithGroq(trendData, rakutenData, yahooData, knowledg
   const dataRef = knowledgeCtx && knowledgeCtx.dataPoints ? knowledgeCtx.dataPoints + '件の学習データを参照' : '初回生成';
   const prompt = `あなたは日本市場専門のビジネスストラテジストです。${learnedContext}\nキーワード: ${trendData.keyword}\nトレンド: ${trendData.score}/100 (${trendData.trend})\n楽天: ${rakutenData?.demandSignal?.level}、平均¥${rakutenData?.demandSignal?.avgPrice}、${rakutenData?.demandSignal?.itemCount}件\nYahoo: ${yahooData?.totalHits}件、平均¥${yahooData?.avgPrice}\n\nJSONのみ返してください（マークダウン不要）:\n{\"plan\":{\"title\":\"\",\"tagline\":\"\",\"opportunity\":\"\",\"target\":\"\",\"service\":\"\",\"differentiation\":[],\"revenueModel\":\"\",\"actionPlan\":[],\"seoKeywords\":[],\"risk\":\"\",\"learnedFrom\":\"${dataRef}\"},\"copy\":{\"heroHeadline\":\"\",\"heroSub\":\"\",\"heroCta\":\"\",\"problems\":[{\"icon\":\"\",\"title\":\"\",\"desc\":\"\"}],\"features\":[{\"icon\":\"\",\"title\":\"\",\"desc\":\"\"}],\"pricing\":[{\"name\":\"\",\"price\":\"\",\"period\":\"\",\"features\":[],\"cta\":\"\",\"highlighted\":false}],\"testimonials\":[{\"name\":\"\",\"role\":\"\",\"initials\":\"\",\"color\":\"\",\"stars\":5,\"text\":\"\"}],\"companyName\":\"\"}}`;
 
+
+  let attempts = 0;
+  while (attempts < 3) {
+    try {
+      const GROQ_KEY = process.env.GROQ_API_KEY;
+      const response = await axios.post(
+        'https://api.groq.com/openai/v1/chat/completions',
+        { model: 'llama-3.3-70b-versatile', max_tokens: 3000, messages: [{ role: 'user', content: prompt }] },
+        { headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${GROQ_KEY}` }, timeout: 60000 }
+      );
+      const raw = response.data?.choices?.[0]?.message?.content ?? '';
+      const clean = raw.replace(/^```json\n?|```[\s\S]*?$/gm, '').trim();
+      return JSON.parse(clean);
+    } catch (e) {
+      if (e.response?.status === 429 || e.code === 'ECONNABORTED') { attempts++; await sleep(10000); continue; }
+      throw new Error(`Groq generation failed: ${e.message}`);
+    }
+  }
+  throw new Error('Groq API unavailable after retries.');
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // PHASE 3 — PAID LAYER (Claude via corporate key — gated by score ≥ 70)
 // ─────────────────────────────────────────────────────────────────────────────
