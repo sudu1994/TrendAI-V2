@@ -75,6 +75,7 @@ async function fetchRakutenData(keyword) {
   try {
     const r = await axios.get('https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601', {
       params: { applicationId: APP_ID, format: 'json', keyword, hits: 10, sort: '-reviewCount' },
+      headers: { 'Referer': 'https://trend-ai-v2-rld7.vercel.app/', 'User-Agent': 'Mozilla/5.0' },
       timeout: 6000,
     });
     const count = r.data.count || 0;
